@@ -33,16 +33,25 @@
     var _grid,
         _uid,
         _handler = new Slick.EventHandler(),
+
+        /*
+         * DOM elements structure
+         * _headerScroller
+         *   _origHeadersEl
+         *   _groupHeadesEl
+         */
         _headerScrollerEl,
-        _headersEl;
+        _groupHeadersEl,
+        _origHeadersEl;
+
 
     function init(grid) {
       _grid = grid;
       _uid = _grid.getContainerNode().className.match(/(?: |^)slickgrid_(\d+)(?!\w)/)[1];
       _handler
         .subscribe(_grid.onColumnsResized, handleColumnsResized);
-
       _headerScrollerEl = _grid.getContainerNode().getElementsByClassName('slick-header')[0];
+      _origHeadersEl = document.getElementsByClassName('slick-header-columns')[0];
 
       _grid.setColumns = (function (originalSetColumns) {
         return function (columnDefinitions) {
@@ -52,9 +61,9 @@
       }(_grid.setColumns));
 
       var tmp = document.createElement('div');
-      tmp.innerHTML = '<div class="slick-header-columns-groups" style="left: -1000px" unselectable="on"></div>';
-      _headersEl = tmp.childNodes[0];
-      _headerScrollerEl.insertBefore(_headersEl, _headerScrollerEl.firstChild);
+      tmp.innerHTML = '<div class="slick-header-columns slick-header-columns-groups" style="left: -1000px" unselectable="on"></div>';
+      _groupHeadersEl = tmp.childNodes[0];
+      _headerScrollerEl.insertBefore(_groupHeadersEl, _headerScrollerEl.firstChild);
       createColumnGroupHeaders();
     }
 
@@ -63,7 +72,7 @@
     }
 
     function measureCellHorizontalPaddingAndBorder() {
-      var computed = window.getComputedStyle(_headerScrollerEl.getElementsByClassName('slick-header-column')[0]);
+      var computed = window.getComputedStyle(_origHeadersEl.getElementsByClassName('slick-header-column')[0]);
       var headerColumnWidthDiff = 0;
       $.each(['paddingLeft', 'paddingRight', 'borderLeftWidth', 'borderRightWidth'], function (n, val) {
         headerColumnWidthDiff += (parseFloat(computed[val]) || 0);
@@ -77,14 +86,14 @@
           tmpWidth = 0,
           colGroupIdx = 0;
 
-      _headersEl.style.width = getHeadersWidth();
+      _groupHeadersEl.style.width = getHeadersWidth();
 
       for (i = 0, len = columns.length; i < len; i++) {
         var columnWidth = parseInt(document.getElementById('slickgrid_' + _uid + columns[i].id).offsetWidth);
         var group = columns[i].group;
         tmpWidth += columnWidth;
         if (!columns[i + 1] || group !== columns[i + 1].group) {
-          _headersEl.getElementsByClassName('slick-header-columns-group')[colGroupIdx++].style.width =
+          _groupHeadersEl.getElementsByClassName('slick-header-columns-group')[colGroupIdx++].style.width =
             tmpWidth - measureCellHorizontalPaddingAndBorder() + 'px';
           tmpWidth = 0;
         }
@@ -92,7 +101,7 @@
     }
 
     function getHeadersWidth() {
-      return document.getElementsByClassName('slick-header-columns')[0].style.width;
+      return _origHeadersEl.style.width;
     }
 
     function createColumnGroupHeaders() {
@@ -104,14 +113,14 @@
         var group = columns[i].group;
         if (!columns[i + 1] || group !== columns[i + 1].group) {
           columnsGroupHtml += [
-            '<div class="ui-state-default slick-header-columns-group">',
+            '<div class="ui-state-default slick-header-column slick-header-columns-group">',
             '  <span class="slick-column-name">' + group + '</span>',
             '  <div class="slick-resizable-handle"></div>',
             '</div>'
           ].join('\n');
         }
       }
-      _headersEl.innerHTML = columnsGroupHtml;
+      _groupHeadersEl.innerHTML = columnsGroupHtml;
       applyColumnGroupWidths();
       _grid.resizeCanvas();
     }
