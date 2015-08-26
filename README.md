@@ -1,6 +1,5 @@
 # slickgrid-colgroup-plugin
 
-
 [SlickGrid](https://github.com/mleibman/SlickGrid) plugin to create column group in a header.
 
 
@@ -22,3 +21,7 @@ var columns = [
   {id: 'col4', name: 'My column 4', group: 'group-2'}
 ];
 ```
+
+## License
+
+MIT (c) keik

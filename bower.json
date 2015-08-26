@@ -9,7 +9,7 @@
     }
   ],
   "description": "SlickGrid plugin to create column group in a header.",
-  "main": "slick.colgroup.js",
+  "main": ["slick.colgroup.js"],
   "keywords": [
     "slickgrid",
     "grid",
@@ -21,7 +21,9 @@
     "node_modules",
     "bower_components",
     "test",
-    "tests"
+    "tests",
+    "tmp",
+    "package.json"
   ],
   "dependencies": {
     "slickgrid": "https://github.com/mleibman/SlickGrid.git#2.1.0"

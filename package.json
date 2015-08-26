@@ -4,7 +4,9 @@
   "description": "SlickGrid plugin to create column group in a header.",
   "main": "slick.colgroup.js",
   "scripts": {
-    "test": "mocha-phantomjs tests/index.html"
+    "lint": "eslint *.js",
+    "test": "mocha-phantomjs tests/index.html",
+    "build": "npm run lint && npm run test && uglifyjs slick.colgroup.js -cm --comments -o slick.colgroup.min.js"
   },
   "repository": {
     "type": "git",
@@ -28,6 +30,7 @@
   "devDependencies": {
     "chai": "^3.2.0",
     "mocha-phantomjs": "^3.6.0",
-    "phantomjs": "^1.9.7-15"
+    "phantomjs": "^1.9.7-15",
+    "uglify-js": "^2.4.24"
   }
 }

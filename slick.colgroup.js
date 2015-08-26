@@ -1,6 +1,10 @@
-/* global Slick */
+/**
+ * https://github.com/keik/slickgrid-colgroup-plugin
+ * (c) keik
+ * @license MIT
+ */
 
-(function ($) {
+(function($) {
   'use strict';
 
   // register namespace
@@ -12,7 +16,7 @@
     }
   });
 
-  /***
+  /**
    * A plugin to create column group in a header.
    *
    * USAGE:
@@ -53,8 +57,8 @@
       _headerScrollerEl = _grid.getContainerNode().getElementsByClassName('slick-header')[0];
       _origHeadersEl = document.getElementsByClassName('slick-header-columns')[0];
 
-      _grid.setColumns = (function (originalSetColumns) {
-        return function (columnDefinitions) {
+      _grid.setColumns = (function(originalSetColumns) {
+        return function(columnDefinitions) {
           originalSetColumns(columnDefinitions);
           createColumnGroupHeaders();
         };
@@ -63,8 +67,8 @@
       // depending on grid option `explicitInitialization`, change a timing of column group creation.
       if (grid.getOptions()['explicitInitialization']) {
         // grid are not yet rendered, so advice for `_grid.init` with column group creation.
-        _grid.init = (function (originalInit) {
-          return function () {
+        _grid.init = (function(originalInit) {
+          return function() {
             originalInit();
             createColumnGroupHeaderRow();
             createColumnGroupHeaders();
@@ -84,7 +88,7 @@
     function measureCellHorizontalPaddingAndBorder() {
       var computed = window.getComputedStyle(_origHeadersEl.getElementsByClassName('slick-header-column')[0]);
       var headerColumnWidthDiff = 0;
-      $.each(['paddingLeft', 'paddingRight', 'borderLeftWidth', 'borderRightWidth'], function (n, val) {
+      $.each(['paddingLeft', 'paddingRight', 'borderLeftWidth', 'borderRightWidth'], function(n, val) {
         headerColumnWidthDiff += (parseFloat(computed[val]) || 0);
       });
       return headerColumnWidthDiff;
@@ -99,7 +103,7 @@
       _groupHeadersEl.style.width = getHeadersWidth();
 
       for (i = 0, len = columns.length; i < len; i++) {
-        var columnWidth = parseInt(document.getElementById('slickgrid_' + _uid + columns[i].id).offsetWidth);
+        var columnWidth = parseInt(document.getElementById('slickgrid_' + _uid + columns[i].id).offsetWidth, 10);
         var group = columns[i].group;
         tmpWidth += columnWidth;
         if (!columns[i + 1] || group !== columns[i + 1].group) {
@@ -145,4 +149,4 @@
       'init': init
     });
   }
-})(jQuery);
+}(jQuery));
