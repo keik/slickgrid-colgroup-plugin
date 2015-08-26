@@ -60,11 +60,21 @@
         };
       }(_grid.setColumns));
 
-      var tmp = document.createElement('div');
-      tmp.innerHTML = '<div class="slick-header-columns slick-header-columns-groups" style="left: -1000px" unselectable="on"></div>';
-      _groupHeadersEl = tmp.childNodes[0];
-      _headerScrollerEl.insertBefore(_groupHeadersEl, _headerScrollerEl.firstChild);
-      createColumnGroupHeaders();
+      // depending on grid option `explicitInitialization`, change a timing of column group creation.
+      if (grid.getOptions()['explicitInitialization']) {
+        // grid are not yet rendered, so advice for `_grid.init` with column group creation.
+        _grid.init = (function (originalInit) {
+          return function () {
+            originalInit();
+            createColumnGroupHeaderRow();
+            createColumnGroupHeaders();
+          };
+        }(_grid.init));
+      } else {
+        // grid are already rendered, so create immidiately.
+        createColumnGroupHeaderRow();
+        createColumnGroupHeaders();
+      }
     }
 
     function handleColumnsResized() {
@@ -104,6 +114,13 @@
       return _origHeadersEl.style.width;
     }
 
+    function createColumnGroupHeaderRow() {
+      var tmp = document.createElement('div');
+      tmp.innerHTML = '<div class="slick-header-columns slick-header-columns-groups" style="left: -1000px" unselectable="on"></div>';
+      _groupHeadersEl = tmp.childNodes[0];
+      _headerScrollerEl.insertBefore(_groupHeadersEl, _headerScrollerEl.firstChild);
+    }
+
     function createColumnGroupHeaders() {
       var i, len,
           columns = _grid.getColumns(),
@@ -122,7 +139,6 @@
       }
       _groupHeadersEl.innerHTML = columnsGroupHtml;
       applyColumnGroupWidths();
-      _grid.resizeCanvas();
     }
 
     $.extend(this, {

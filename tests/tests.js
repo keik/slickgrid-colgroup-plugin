@@ -1,7 +1,10 @@
 assert = chai.assert;
 
-var grid;
-function createGrid() {
+/**
+ * @param {Object} options SlickGrid grid options
+ * @return {SlickGrid} SlickGrid object
+ */
+function createGrid(options) {
   var $container = $('<div id="grid" style="width: 400px; height: 300px;"></div>').appendTo(document.body);
 
   var columns = [
@@ -12,10 +15,13 @@ function createGrid() {
     {id: "finish", name: "Finish", field: "finish", group: "3"},
     {id: "effort-driven", name: "Effort Driven", field: "effortDriven", group: "3"}
   ];
-  var options = {
+
+  var defaultOptions = {
     enableCellNavigation: true,
     enableColumnReorder: false
   };
+  options = $.extend({}, defaultOptions, options)
+
   var data = [];
   for (var i = 0; i < 500; i++) {
     data[i] = {
@@ -28,24 +34,23 @@ function createGrid() {
     };
   }
 
-  grid = new Slick.Grid('#grid', data, columns, options);
+  return new Slick.Grid('#grid', data, columns, options);
 }
 
 describe('slickgrid-colgroup-plugin', function () {
-
-  beforeEach(function () {
-    createGrid();
-  });
 
   afterEach(function () {
     $('#grid').remove();
   });
 
   describe('# Event', function () {
+
     describe('colmun group', function () {
+
       it('should be resized when a child column resize +300px.', function () {
         // setup
-        var $col3 = $('.slick-header-column').eq(2),
+        var grid = createGrid(),
+            $col3 = $('.slick-header-column').eq(2),
             $col4 = $('.slick-header-column').eq(3);
         grid.registerPlugin(new Slick.Plugins.ColGroup());
         // exercise
@@ -59,7 +64,8 @@ describe('slickgrid-colgroup-plugin', function () {
 
       it('should be resized when a child column resize -300px.', function () {
         // setup
-        var $col3 = $('.slick-header-column').eq(2),
+        var grid = createGrid(),
+            $col3 = $('.slick-header-column').eq(2),
             $col4 = $('.slick-header-column').eq(3);
         grid.registerPlugin(new Slick.Plugins.ColGroup());
         // exercise
@@ -73,7 +79,8 @@ describe('slickgrid-colgroup-plugin', function () {
 
       it('should be shorten width when a part of child columns gone.', function () {
         // setup
-        var col1_width = $('.slick-header-column').eq(0).outerWidth(),
+        var grid = createGrid(),
+            col1_width = $('.slick-header-column').eq(0).outerWidth(),
             col2_width = $('.slick-header-column').eq(1).outerWidth();
         grid.registerPlugin(new Slick.Plugins.ColGroup());
         // exercise
@@ -84,8 +91,10 @@ describe('slickgrid-colgroup-plugin', function () {
         var colgroup1_width = $('.slick-header-columns-group').eq(0).outerWidth();
         assert.equal(colgroup1_width, col2_width);
       });
+
       it('should gone when all children columns gone.', function () {
         // setup
+        var grid = createGrid();
         grid.registerPlugin(new Slick.Plugins.ColGroup());
         var colGroup1El = $('.slick-header-columns-group').eq(0)[0];
         // exercise
@@ -95,6 +104,19 @@ describe('slickgrid-colgroup-plugin', function () {
         // verify
         assert.notOk($.contains(document.body, colGroup1El));
       });
+
+      it('should be shown when explicit init (SlickGrid option `explicitInitialization: true`)', function () {
+        // setup
+        var grid = createGrid({explicitInitialization: true});
+        grid.registerPlugin(new Slick.Plugins.ColGroup());
+        // exercise and verify
+        var before_colgroupRowEl = $('.slick-header-columns-group');
+        assert.equal(before_colgroupRowEl.length, 0);
+        grid.init();
+        var after_colgroupRowEl = $('.slick-header-columns-group');
+        assert.equal(after_colgroupRowEl.length, 3);
+      });
+
     });
   });
 });
