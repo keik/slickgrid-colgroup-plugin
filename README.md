@@ -2,6 +2,7 @@
 
 [SlickGrid](https://github.com/mleibman/SlickGrid) plugin to create column group in a header.
 
+![](https://github.com/keik/slickgrid-colgroup-plugin/raw/master/screenshots/screenshot.png)
 
 ## Usage
 
