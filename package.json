@@ -2,11 +2,16 @@
   "name": "slickgrid-colgroup-plugin",
   "version": "0.1.0",
   "description": "SlickGrid plugin to create column group in a header.",
-  "main": "slick.colgroup.js",
+  "main": "dist/slick.colgroup.js",
   "scripts": {
-    "lint": "eslint *.js",
+    "lint": "eslint src/*.es",
+    "start:dev": "http-server & watchify src/slick.colgroup.es -o dist/slick.colgroup.js -t babelify -v",
     "test": "mocha-phantomjs tests/index.html",
-    "build": "npm run lint && npm run test && uglifyjs slick.colgroup.js -cm --comments -o slick.colgroup.min.js"
+    "build": "npm run clean && npm run lint && npm run browserify && npm run uglify && npm run test",
+    "-----": "----------------------------------------------------------------",
+    "clean": "rimraf dist && mkdirp dist",
+    "browserify": "browserify -t babelify src/slick.colgroup.es > dist/slick.colgroup.js",
+    "uglify": "uglifyjs dist/slick.colgroup.js -cm --comments -o dist/slick.colgroup.min.js"
   },
   "repository": {
     "type": "git",
@@ -28,9 +33,15 @@
   },
   "homepage": "https://github.com/keik/slickgrid-colgroup-plugin#readme",
   "devDependencies": {
+    "babelify": "^6.2.0",
+    "browserify": "^11.0.1",
     "chai": "^3.2.0",
+    "eslint": "^1.2.1",
+    "http-server": "^0.8.0",
+    "mkdirp": "^0.5.1",
     "mocha-phantomjs": "^3.6.0",
-    "phantomjs": "^1.9.7-15",
-    "uglify-js": "^2.4.24"
+    "rimraf": "^2.4.2",
+    "uglify-js": "^2.4.24",
+    "watchify": "^3.3.1"
   }
 }
