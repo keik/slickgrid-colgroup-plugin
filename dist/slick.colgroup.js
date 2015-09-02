@@ -77,6 +77,8 @@ function ColGroup() {
       createColumnGroupHeaderRow();
       createColumnGroupHeaders();
     }
+
+    _grid.resizeCanvas();
   }
 
   function handleColumnsResized() {
