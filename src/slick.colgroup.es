@@ -39,8 +39,8 @@ function ColGroup() {
       /*
        * DOM elements structure
        * _headerScroller
-       *   _origHeadersEl
        *   _groupHeadesEl
+       *   _origHeadersEl
        */
       _headerScrollerEl,
       _groupHeadersEl,
@@ -53,7 +53,7 @@ function ColGroup() {
     _handler
       .subscribe(_grid.onColumnsResized, handleColumnsResized);
     _headerScrollerEl = _grid.getContainerNode().getElementsByClassName('slick-header')[0];
-    _origHeadersEl = document.getElementsByClassName('slick-header-columns')[0];
+    _origHeadersEl = _headerScrollerEl.getElementsByClassName('slick-header-columns')[0];
 
     _grid.setColumns = (function(originalSetColumns) {
       return function(columnDefinitions) {
@@ -61,6 +61,16 @@ function ColGroup() {
         createColumnGroupHeaders();
       };
     }(_grid.setColumns));
+
+    // no event fired when `autosizeColumns` called, so follow it by advicing below methods with column group resizing.
+    ['invalidate', 'render'].forEach(function(fnName) {
+      _grid[fnName] = (function(origFn) {
+        return function() {
+          origFn(arguments);
+          applyColumnGroupWidths();
+        };
+      }(_grid[fnName]));
+    });
 
     // depending on grid option `explicitInitialization`, change a timing of column group creation.
     if (grid.getOptions()['explicitInitialization']) {
