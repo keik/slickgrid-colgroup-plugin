@@ -81,14 +81,12 @@ function ColGroup() {
           originalInit();
           createColumnGroupHeaderRow();
           createColumnGroupHeaders();
-          _grid.resizeCanvas();
         };
       })(_grid.init);
     } else {
       // grid are already rendered, so create immidiately.
       createColumnGroupHeaderRow();
       createColumnGroupHeaders();
-      _grid.resizeCanvas();
     }
   }
 
@@ -150,6 +148,9 @@ function ColGroup() {
     }
     _groupHeadersEl.innerHTML = columnsGroupHtml;
     applyColumnGroupWidths();
+
+    // for horizontal scroll bar
+    _grid.resizeCanvas();
   }
 
   $.extend(this, {
