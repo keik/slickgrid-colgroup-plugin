@@ -4,6 +4,7 @@
   "description": "SlickGrid plugin to create column group in a header.",
   "main": "dist/slick.colgroup.js",
   "scripts": {
+    "install": "bower i",
     "lint": "eslint src/*.es",
     "start:dev": "http-server & watchify src/slick.colgroup.es -o dist/slick.colgroup.js -t babelify -v",
     "test": "mocha-phantomjs tests/index.html",
@@ -36,12 +37,14 @@
   "homepage": "https://github.com/keik/slickgrid-colgroup-plugin#readme",
   "devDependencies": {
     "babelify": "^6.2.0",
+    "bower": "^1.5.3",
     "browserify": "^11.0.1",
     "chai": "^3.2.0",
     "eslint": "^1.2.1",
     "http-server": "^0.8.0",
     "mkdirp": "^0.5.1",
-    "mocha-phantomjs": "^3.6.0",
+    "mocha": "^2.3.3",
+    "mocha-phantomjs": "^4.0.1",
     "rimraf": "^2.4.2",
     "uglify-js": "^2.4.24",
     "watchify": "^3.3.1"
