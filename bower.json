@@ -27,7 +27,7 @@
     "screenshots",
     "examples"
   ],
-  "dependencies": {
+  "devDependencies": {
     "slickgrid": "https://github.com/mleibman/SlickGrid.git#2.1.0"
   }
 }
