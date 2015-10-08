@@ -84,6 +84,9 @@ function ColGroup() {
       // grid are not yet rendered, so advice for `grid.init` with column group creation.
       grid.init = (function(originalInit) {
         return function() {
+          // update current target grid UID
+          _uid = this.getContainerNode().className.match(/(?: |^)slickgrid_(\d+)(?!\w)/)[1];
+
           originalInit();
           createColumnGroupHeaderRow();
           createColumnGroupHeaders();
