@@ -1,7 +1,7 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 /**
  * https://github.com/keik/slickgrid-colgroup-plugin
- * @version v0.1.3
+ * @version v0.1.4
  * @author keik <k4t0.kei@gmail.com>
  * @license MIT
  */
@@ -86,6 +86,9 @@ function ColGroup() {
       // grid are not yet rendered, so advice for `grid.init` with column group creation.
       grid.init = (function (originalInit) {
         return function () {
+          // update current target grid UID
+          _uid = this.getContainerNode().className.match(/(?: |^)slickgrid_(\d+)(?!\w)/)[1];
+
           originalInit();
           createColumnGroupHeaderRow();
           createColumnGroupHeaders();
