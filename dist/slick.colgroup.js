@@ -1,7 +1,7 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 /**
  * https://github.com/keik/slickgrid-colgroup-plugin
- * @version v0.1.3
+ * @version $VERSION
  * @author keik <k4t0.kei@gmail.com>
  * @license MIT
  */
@@ -66,7 +66,7 @@ function ColGroup() {
         // update current target grid UID
         _uid = this.getContainerNode().className.match(/(?: |^)slickgrid_(\d+)(?!\w)/)[1];
 
-        originalSetColumns(columnDefinitions);
+        originalSetColumns(genInnerColumnDef(columnDefinitions));
         createColumnGroupHeaders();
       };
     })(grid.setColumns);
@@ -87,13 +87,17 @@ function ColGroup() {
       grid.init = (function (originalInit) {
         return function () {
           originalInit();
+          _cache[_uid].columnDefsByLevel = genColumnDefsByLevel(grid.getColumns());
+          _cache[_uid].innerColumnDefs = genInnerColumnDef(grid.getColumns());
           createColumnGroupHeaderRow();
           createColumnGroupHeaders();
         };
       })(grid.init);
     } else {
       // grid are already rendered, so create immidiately.
+      _cache[_uid].columnDefsByLevel = genColumnDefsByLevel(grid.getColumns());
       createColumnGroupHeaderRow();
+      _cache[_uid].grid.setColumns(grid.getColumns());
       createColumnGroupHeaders();
     }
   }
@@ -118,14 +122,14 @@ function ColGroup() {
         tmpWidth = 0,
         colGroupIdx = 0;
 
-    _cache[_uid].groupHeadersEl.style.width = getHeadersWidth();
+    _cache[_uid].groupHeadersEl[0].style.width = getHeadersWidth();
 
     for (i = 0, len = columns.length; i < len; i++) {
       var columnWidth = parseInt(document.getElementById('slickgrid_' + (_uid + columns[i].id)).offsetWidth, 10);
       var group = columns[i].group;
       tmpWidth += columnWidth;
       if (!columns[i + 1] || group !== columns[i + 1].group) {
-        _cache[_uid].groupHeadersEl.getElementsByClassName('slick-header-columns-group')[colGroupIdx++].style.width = tmpWidth - measureCellHorizontalPaddingAndBorder() + 'px';
+        _cache[_uid].groupHeadersEl[0].getElementsByClassName('slick-header-columns-group')[colGroupIdx++].style.width = tmpWidth - measureCellHorizontalPaddingAndBorder() + 'px';
         tmpWidth = 0;
       }
     }
@@ -136,10 +140,14 @@ function ColGroup() {
   }
 
   function createColumnGroupHeaderRow() {
-    var tmp = document.createElement('div');
-    tmp.innerHTML = '<div class="slick-header-columns slick-header-columns-groups" style="left: -1000px" unselectable="on"></div>';
-    _cache[_uid].groupHeadersEl = tmp.childNodes[0];
-    _cache[_uid].headerScrollerEl.insertBefore(_cache[_uid].groupHeadersEl, _cache[_uid].headerScrollerEl.firstChild);
+    _cache[_uid].groupHeadersEl = [];
+    var columnDefsByLevel = _cache[_uid].columnDefsByLevel;
+    for (var i = 0, len = columnDefsByLevel.length; i < len - 1; i++) {
+      var tmp = document.createElement('div');
+      tmp.innerHTML = '<div class="slick-header-columns slick-header-columns-groups" style="left: -1000px" unselectable="on"></div>';
+      _cache[_uid].groupHeadersEl[0] = tmp.childNodes[0];
+      _cache[_uid].headerScrollerEl.insertBefore(_cache[_uid].groupHeadersEl[0], _cache[_uid].headerScrollerEl.firstChild);
+    }
   }
 
   function createColumnGroupHeaders() {
@@ -154,11 +162,40 @@ function ColGroup() {
         columnsGroupHtml += '<div class="ui-state-default slick-header-column slick-header-columns-group">\n             <span class="slick-column-name">' + group + '</span>\n             <div class="slick-resizable-handle"></div>\n           </div>';
       }
     }
-    _cache[_uid].groupHeadersEl.innerHTML = columnsGroupHtml;
+    _cache[_uid].groupHeadersEl[0].innerHTML = columnsGroupHtml;
     applyColumnGroupWidths();
 
     // for horizontal scroll bar
     _cache[_uid].grid.resizeCanvas();
+  }
+
+  function genColumnDefsByLevel(columns) {
+    var depth = arguments.length <= 1 || arguments[1] === undefined ? 0 : arguments[1];
+    var acc = arguments.length <= 2 || arguments[2] === undefined ? [] : arguments[2];
+
+    for (var i = 0, len = columns.length; i < len; i++) {
+      var column = columns[i];
+      acc[depth] = acc[depth] || [];
+      acc[depth].push(column);
+      if (Object.prototype.toString.apply(column.children) === '[object Array]') {
+        genColumnDefsByLevel(column.children, depth + 1, acc);
+      }
+    }
+    return acc;
+  }
+
+  function genInnerColumnDef(columns) {
+    var acc = arguments.length <= 1 || arguments[1] === undefined ? [] : arguments[1];
+
+    for (var i = 0, len = columns.length; i < len; i++) {
+      var column = columns[i];
+      if (column.children == null) {
+        acc.push(column);
+      } else if (Object.prototype.toString.apply(column.children) === '[object Array]') {
+        genInnerColumnDef(column.children, acc);
+      }
+    }
+    return acc;
   }
 
   $.extend(this, {

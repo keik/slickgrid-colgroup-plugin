@@ -64,7 +64,7 @@ function ColGroup() {
         // update current target grid UID
         _uid = this.getContainerNode().className.match(/(?: |^)slickgrid_(\d+)(?!\w)/)[1];
 
-        originalSetColumns(columnDefinitions);
+        originalSetColumns(genInnerColumnDef(columnDefinitions));
         createColumnGroupHeaders();
       };
     }(grid.setColumns));
@@ -85,13 +85,17 @@ function ColGroup() {
       grid.init = (function(originalInit) {
         return function() {
           originalInit();
+          _cache[_uid].columnDefsByLevel = genColumnDefsByLevel(grid.getColumns());
           createColumnGroupHeaderRow();
+          _cache[_uid].innerColumnDefs = genInnerColumnDef(grid.getColumns());
           createColumnGroupHeaders();
         };
       }(grid.init));
     } else {
       // grid are already rendered, so create immidiately.
+      _cache[_uid].columnDefsByLevel = genColumnDefsByLevel(grid.getColumns());
       createColumnGroupHeaderRow();
+      _cache[_uid].grid.setColumns(grid.getColumns());
       createColumnGroupHeaders();
     }
   }
@@ -115,14 +119,14 @@ function ColGroup() {
         tmpWidth = 0,
         colGroupIdx = 0;
 
-    _cache[_uid].groupHeadersEl.style.width = getHeadersWidth();
+    _cache[_uid].groupHeadersEl[0 /*TODO*/].style.width = getHeadersWidth();
 
     for (i = 0, len = columns.length; i < len; i++) {
       let columnWidth = parseInt(document.getElementById(`slickgrid_${ _uid + columns[i].id }`).offsetWidth, 10);
       let group = columns[i].group;
       tmpWidth += columnWidth;
       if (!columns[i + 1] || group !== columns[i + 1].group) {
-        _cache[_uid].groupHeadersEl.getElementsByClassName('slick-header-columns-group')[colGroupIdx++].style.width =
+        _cache[_uid].groupHeadersEl[0 /*TODO*/].getElementsByClassName('slick-header-columns-group')[colGroupIdx++].style.width =
           tmpWidth - measureCellHorizontalPaddingAndBorder() + 'px';
         tmpWidth = 0;
       }
@@ -134,10 +138,14 @@ function ColGroup() {
   }
 
   function createColumnGroupHeaderRow() {
-    let tmp = document.createElement('div');
-    tmp.innerHTML = '<div class="slick-header-columns slick-header-columns-groups" style="left: -1000px" unselectable="on"></div>';
-    _cache[_uid].groupHeadersEl = tmp.childNodes[0];
-    _cache[_uid].headerScrollerEl.insertBefore(_cache[_uid].groupHeadersEl, _cache[_uid].headerScrollerEl.firstChild);
+    _cache[_uid].groupHeadersEl = [];
+    let columnDefsByLevel = _cache[_uid].columnDefsByLevel;
+    for (let i = 0, len = columnDefsByLevel.length; i < len - 1; i++) {
+      let tmp = document.createElement('div');
+      tmp.innerHTML = '<div class="slick-header-columns slick-header-columns-groups" style="left: -1000px" unselectable="on"></div>';
+      _cache[_uid].groupHeadersEl[0] = tmp.childNodes[0];
+      _cache[_uid].headerScrollerEl.insertBefore(_cache[_uid].groupHeadersEl[0], _cache[_uid].headerScrollerEl.firstChild);
+    }
   }
 
   function createColumnGroupHeaders() {
@@ -155,11 +163,35 @@ function ColGroup() {
            </div>`;
       }
     }
-    _cache[_uid].groupHeadersEl.innerHTML = columnsGroupHtml;
+    _cache[_uid].groupHeadersEl[0/*TODO*/].innerHTML = columnsGroupHtml;
     applyColumnGroupWidths();
 
     // for horizontal scroll bar
     _cache[_uid].grid.resizeCanvas();
+  }
+
+  function genColumnDefsByLevel(columns, depth = 0, acc = []) {
+    for (var i = 0, len = columns.length; i < len; i++) {
+      var column = columns[i];
+      acc[depth] = acc[depth] || [];
+      acc[depth].push(column);
+      if (Object.prototype.toString.apply(column.children) === '[object Array]') {
+        genColumnDefsByLevel(column.children, depth + 1, acc);
+      }
+    }
+    return acc;
+  }
+
+  function genInnerColumnDef(columns, acc = []) {
+    for (var i = 0, len = columns.length; i < len; i++) {
+      var column = columns[i];
+      if (column.children == null) {
+        acc.push(column);
+      } else if (Object.prototype.toString.apply(column.children) === '[object Array]') {
+        genInnerColumnDef(column.children, acc);
+      }
+    }
+    return acc;
   }
 
   $.extend(this, {
