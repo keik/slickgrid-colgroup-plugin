@@ -164,26 +164,30 @@ function ColGroup() {
     setWidthRecursively(columnsDef);
     function setWidthRecursively(columnsDef, depth = 0, colIdx = []) {
       for (let c = 0, C = columnsDef.length; c < C; c++) {
+        // update index in the depth
+        colIdx[depth] = (colIdx[depth] == null ? 0 : colIdx[depth] + 1);
+
+        let width = -measureCellHorizontalPaddingAndBorder();
         let column = columnsDef[c];
         if (Object.prototype.toString.apply(column.children) === '[object Array]') {
+          // process children at first
           setWidthRecursively(column.children, depth + 1, colIdx);
           if (depth < colGroupDepth - 1) {
-            let width = -measureCellHorizontalPaddingAndBorder();
             for (let c2 = 0, C2 = column.children.length; c2 < C2; c2++) {
               width += parseInt(groupHeadersEl[depth + 1].children[columnsDefByLevel[depth + 1].indexOf(column.children[c2])].offsetWidth, 10);
             }
             groupHeadersEl[depth].children[c].style.width = width + 'px';
           } else {
-            let width = -measureCellHorizontalPaddingAndBorder();
             for (let c2 = 0, C2 = column.children.length; c2 < C2; c2++) {
               width += parseInt(origHeadersEl.querySelector(`#slickgrid_${ _uid + column.children[c2].id }`).offsetWidth, 10);
             }
             groupHeadersEl[depth].children[columnsDefByLevel[depth].indexOf(column)].style.width = width + 'px';
           }
-        } else {
-          colIdx[depth] = (colIdx[depth] == null ? 0 : colIdx[depth] + 1);
-          let width = parseInt(origHeadersEl.querySelector(`#slickgrid_${ _uid + column.id }`).offsetWidth, 10) - measureCellHorizontalPaddingAndBorder();
-          groupHeadersEl[1].children[colIdx[depth]].style.width = width + 'px';
+
+        } else if (depth < colGroupDepth) {
+          // process the tip
+          width += parseInt(origHeadersEl.querySelector(`#slickgrid_${ _uid + column.id }`).offsetWidth, 10);
+          groupHeadersEl[depth].children[colIdx[depth]].style.width = width + 'px';
         }
       }
     }
