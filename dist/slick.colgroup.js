@@ -521,13 +521,21 @@ $.extend(true, window, {
  *
  * USAGE:
  *
- * To specify a colmun group, extend the column definition to add `group` property, like so:
+ * To specify a colmun group, extend the column definition to add `children`
+ * property with array value, like so:
  *
  *   var columns = [
- *     {id: 'myColumn1', name: 'My column 1', group: 'group-1'},
- *     {id: 'myColumn2', name: 'My column 2', group: 'group-1'},
- *     {id: 'myColumn3', name: 'My column 3', group: 'group-2'},
- *     {id: 'myColumn4', name: 'My column 4', group: 'group-2'}
+ *     {id: 'col1', name: 'col 1', children: [
+ *       {id: 'col1-1', name: 'col 1-1', field: 'col1-1'},
+ *       {id: 'col1-2', name: 'col 1-2', field: 'col1-2'}
+ *     ]},
+ *     {id: 'col2', name: 'col 2', children: [
+ *       {id: 'col2-1', name: 'col 2-1', field: 'col2-1'},
+ *       {id: 'col2-2', name: 'col 2-2', children: [
+ *         {id: 'col2-2-1', name: 'col 2-2-1', field: 'col2-2-1'},
+ *         {id: 'col2-2-2', name: 'col 2-2-2', field: 'col2-2-2'}
+ *       ]}
+ *     ]}
  *   ];
  *
  * @class Slick.Plugins.ColGroup
