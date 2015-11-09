@@ -562,6 +562,9 @@ function ColGroup() {
     _cache[_uid].grid = grid;
     _cache[_uid].headerScrollerEl = grid.getContainerNode().getElementsByClassName('slick-header')[0];
     _cache[_uid].origHeadersEl = _cache[_uid].headerScrollerEl.getElementsByClassName('slick-header-columns')[0];
+    var v = measureVCellPaddingAndBorder();
+    _cache[_uid].origHeadersEl.style.height = v.height + v.heightDiff + 'px';
+    _cache[_uid].origHeadersEl.style.overflow = 'visible';
     _cache[_uid].columnsDef = grid.getColumns();
     _cache[_uid].innerColumnsDef = genInnerColumnsDef(_cache[_uid].columnsDef);
     _cache[_uid].columnsDefByLevel = genColumnsDefByLevel(grid.getColumns());
@@ -614,12 +617,14 @@ function ColGroup() {
       grid.init = (function (originalInit) {
         return function () {
           originalInit();
+          createCssRules();
           createColumnGroupHeaderRow();
           createColumnGroupHeaders();
           d('grid has been initialized with EXPLICIT mode');
         };
       })(grid.init);
     } else {
+      createCssRules();
       createColumnGroupHeaderRow();
       createColumnGroupHeaders();
       d('grid has been initialized with IMPLICIT mode');
@@ -643,6 +648,30 @@ function ColGroup() {
     return headerColumnWidthDiff;
   }
 
+  /**
+   * Measure a cell height and horizontal padding. (almost adapted from `measureCellPaddingAndBorder` in slick.grid.js)
+   * @private
+   * @returns {undefined} undefined
+   */
+  function measureVCellPaddingAndBorder() {
+
+    var v = ['borderTopWidth', 'borderBottomWidth', 'paddingTop', 'paddingBottom'],
+        $canvas = $(_cache[_uid].grid.getCanvasNode()),
+        $r = $('<div class="slick-row" />').appendTo($canvas),
+        $el = $('<div class="slick-cell" id="" style="visibility:hidden">-</div>').appendTo($r);
+
+    var height = undefined,
+        heightDiff = 0;
+
+    height = parseFloat($el.css('height'));
+    $.each(v, function (n, val) {
+      heightDiff += parseFloat($el.css(val)) || 0;
+    });
+    $r.remove();
+
+    return { height: height, heightDiff: heightDiff };
+  } // _measureVCellPaddingAndBorder
+
   function applyColumnGroupWidths() {
     d('applyColumnGroupWidths');
 
@@ -658,7 +687,6 @@ function ColGroup() {
 
     var columnsDef = _cache[_uid].columnsDef;
 
-    // DEV proto
     setWidthRecursively(columnsDef);
     function setWidthRecursively(columnsDef) {
       var depth = arguments.length <= 1 || arguments[1] === undefined ? 0 : arguments[1];
@@ -728,7 +756,15 @@ function ColGroup() {
       var columns = columnsDefByLevel[r],
           columnsGroupHtml = '';
       for (c = 0, C = columns.length; c < C; c++) {
-        columnsGroupHtml += '\n<div class="ui-state-default slick-header-column slick-header-columns-group">\n  <span class="slick-column-name">' + columns[c].name + '</span>\n  <div class="slick-resizable-handle"></div>\n</div>';
+        var column = columns[c];
+        columnsGroupHtml += '\n<div class="ui-state-default slick-header-column slick-header-columns-group">\n  <span class="slick-column-name">' + (column.children ? column.name : '') + '</span>\n</div>';
+
+        // apply CSS rule for rowspan to tip
+        if (!column.children) {
+          var headersEl = _cache[_uid].origHeadersEl;
+          var tipColumn = headersEl.querySelector('#slickgrid_' + (_uid + column.id));
+          tipColumn.className += ' h' + (columnsDefByLevel.length - r);
+        }
       }
       d('  create groupHeadersEl[%d]', r);
 
@@ -739,6 +775,26 @@ function ColGroup() {
     // for horizontal scroll bar
     _cache[_uid].grid.resizeCanvas();
   }
+
+  function createCssRules() {
+
+    // create style rules
+    var v = measureVCellPaddingAndBorder();
+    var rules = ['.hidden {visibility: hidden;}'];
+
+    var maxrow = 30; // TODO to be intelligent
+    for (var i = 0; i < maxrow; i++) {
+      rules.push('\n.slick-header-column.h' + i + ' {\n  margin: ' + (1 - i) * (v.height + v.heightDiff) + 'px 0 0 0;\n  font-size: inherit;\n  height: ' + (i * (v.height + v.heightDiff) - v.heightDiff * 2 + 1) + 'px;\n}');
+    }
+
+    var styleEl = $('<style type="text/css" rel="stylesheet" />').appendTo($('head'))[0];
+    if (styleEl.styleSheet) {
+      // IE
+      styleEl.styleSheet.cssText = rules.join(' ');
+    } else {
+      styleEl.appendChild(document.createTextNode(rules.join(' ')));
+    }
+  } // _createCssRules
 
   function genColumnsDefByLevel(columns) {
     var depth = arguments.length <= 1 || arguments[1] === undefined ? 0 : arguments[1];
@@ -757,7 +813,7 @@ function ColGroup() {
     return acc;
   }
 
-  function genInnerColumnsDef(columns) /* DEV */{
+  function genInnerColumnsDef(columns) {
     var acc = arguments.length <= 1 || arguments[1] === undefined ? [] : arguments[1];
     var first = arguments.length <= 2 || arguments[2] === undefined ? true : arguments[2];
 
@@ -768,7 +824,7 @@ function ColGroup() {
       if (column.children == null) {
         acc.push(column);
       } else if (Object.prototype.toString.apply(column.children) === '[object Array]') {
-        genInnerColumnsDef(column.children, acc, false /* DEV */);
+        genInnerColumnsDef(column.children, acc, false);
       }
     }
     return acc;
