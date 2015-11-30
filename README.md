@@ -14,15 +14,21 @@ Register plugin:
 grid.registerPlugin(new Slick.Plugins.ColGroup());
 ```
 
-To specify a colmun group, extend the column definition to add `group` property, like so:
+To specify a colmun group, extend the column definition to add `children` property with array value, like so:
 
 ```
 var columns = [
-  {id: 'col1-1', name: 'col 1-1',  field: 'col1-1', group: 'group 1'},
-  {id: 'col1-2', name: 'col 1-2',  field: 'col1-2', group: 'group 1'},
-  {id: 'col2',   name: 'col 2',    field: 'col2',   group: 'group 2'},
-  {id: 'col3-1', name: 'col 3-1',  field: 'col3-1', group: 'group 3'},
-  {id: 'col3-2', name: 'col 3-2',  field: 'col3-2', group: 'group 3'}
+  {id: 'col1', name: 'col 1', children: [
+    {id: 'col1-1', name: 'col 1-1', field: 'col1-1'},
+    {id: 'col1-2', name: 'col 1-2', field: 'col1-2'}
+  ]},
+  {id: 'col2', name: 'col 2', children: [
+    {id: 'col2-1', name: 'col 2-1', field: 'col2-1'},
+    {id: 'col2-2', name: 'col 2-2', children: [
+      {id: 'col2-2-1', name: 'col 2-2-1', field: 'col2-2-1'},
+      {id: 'col2-2-2', name: 'col 2-2-2', field: 'col2-2-2'}
+    ]}
+  ]}
 ];
 ```
 
