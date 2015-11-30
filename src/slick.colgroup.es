@@ -94,6 +94,7 @@ function ColGroup() {
 
         _cache[_uid].columnsDef = columnsDef;
         _cache[_uid].innerColumnsDef = genInnerColumnsDef(columnsDef);
+        _cache[_uid].columnsDefByLevel = genColumnsDefByLevel(grid.getColumns());
         originalSetColumns(_cache[_uid].innerColumnsDef);
         createColumnGroupHeaders();
       };
@@ -127,6 +128,7 @@ function ColGroup() {
       grid.init = (function(originalInit) {
         return function() {
           originalInit();
+          measureCellHorizontalPaddingAndBorder = memoizeMeasureCellHorizontalPaddingAndBorder();
           createCssRules();
           createColumnGroupHeaderRow();
           createColumnGroupHeaders();
@@ -134,6 +136,7 @@ function ColGroup() {
         };
       }(grid.init));
     } else {
+      measureCellHorizontalPaddingAndBorder = memoizeMeasureCellHorizontalPaddingAndBorder();
       createCssRules();
       createColumnGroupHeaderRow();
       createColumnGroupHeaders();
@@ -141,21 +144,38 @@ function ColGroup() {
     }
   }
 
+  /**
+   * A Handler for onColumnsResized event.
+   */
   function handleColumnsResized() {
     d('handleColumnsResized');
 
     applyColumnGroupWidths();
   }
 
-  function measureCellHorizontalPaddingAndBorder() {
-    d('measureCellHorizontalPaddingAndBorder');
+  /**
+   * Return horizontal padding and border pixels on a cell.
+   * @return {Number} Horizontal padding and border pixels on a cell
+   */
+  var measureCellHorizontalPaddingAndBorder;
+  function memoizeMeasureCellHorizontalPaddingAndBorder() {
+    d('genMeasureCellHorizontalPaddingAndBorder');
 
-    let computed = window.getComputedStyle(_cache[_uid].origHeadersEl.getElementsByClassName('slick-header-column')[0]);
-    let headerColumnWidthDiff = 0;
-    ['paddingLeft', 'paddingRight', 'borderLeftWidth', 'borderRightWidth'].forEach(function(val) {
-      headerColumnWidthDiff += (parseFloat(computed[val]) || 0);
-    });
-    return headerColumnWidthDiff;
+    let headerColumnWidthDiff;
+
+    return function() {
+      d('measureCellHorizontalPaddingAndBorder');
+
+      if (headerColumnWidthDiff)
+        return headerColumnWidthDiff;
+
+      let computed = window.getComputedStyle(_cache[_uid].origHeadersEl.getElementsByClassName('slick-header-column')[0]);
+      headerColumnWidthDiff = 0;
+      ['paddingLeft', 'paddingRight', 'borderLeftWidth', 'borderRightWidth'].forEach(function(val) {
+        headerColumnWidthDiff += (parseFloat(computed[val]) || 0);
+      });
+      return headerColumnWidthDiff;
+    };
   }
 
   /**
@@ -182,7 +202,9 @@ function ColGroup() {
     return {height, heightDiff};
   } // _measureVCellPaddingAndBorder
 
-
+  /**
+   * Apply column group header's widths.
+   */
   function applyColumnGroupWidths() {
     d('applyColumnGroupWidths');
 
@@ -206,7 +228,7 @@ function ColGroup() {
 
         let width = -measureCellHorizontalPaddingAndBorder();
         let column = columnsDef[c];
-        if (Object.prototype.toString.apply(column.children) === '[object Array]') {
+        if (column.children && column.children.length > 0) {
           // process children at first
           setWidthRecursively(column.children, depth + 1, colIdx);
           if (depth < colGroupDepth - 1) {
@@ -228,14 +250,21 @@ function ColGroup() {
         }
       }
     }
-  }
+  } // applyColumnGroupWidths
 
+  /**
+   * Return headers width
+   * @returns {String} String for headers width style
+   */
   function getHeadersWidth() {
     d('getHeadersWidth');
 
     return _cache[_uid].origHeadersEl.style.width;
   }
 
+  /**
+   * Create column group header row elements
+   */
   function createColumnGroupHeaderRow() {
     d('createColumnGroupHeaderRow');
 
@@ -252,6 +281,9 @@ function ColGroup() {
     _cache[_uid].headerScrollerEl.insertBefore(fragment, _cache[_uid].headerScrollerEl.firstChild);
   }
 
+  /**
+   * Create column group header elements
+   */
   function createColumnGroupHeaders() {
     d('createColumnGroupHeaders');
 
@@ -265,11 +297,10 @@ function ColGroup() {
         let column = columns[c];
         columnsGroupHtml += `
 <div class="ui-state-default slick-header-column slick-header-columns-group">
-  <span class="slick-column-name">${ column.children ? column.name : '' }</span>
+  <span class="slick-column-name">${ hasChildren(column) ? column.name : '' }</span>
 </div>`;
-
         // apply CSS rule for rowspan to tip
-        if (!column.children) {
+        if (!hasChildren(column)) {
           let headersEl = _cache[_uid].origHeadersEl;
           let tipColumn = headersEl.querySelector(`#slickgrid_${ _uid + column.id }`);
           tipColumn.className += ' h' + (columnsDefByLevel.length - r);
@@ -285,8 +316,11 @@ function ColGroup() {
     _cache[_uid].grid.resizeCanvas();
   }
 
+  /**
+   * Create CSS rules for header's rowspan style, with
+   * `style` element which will be appended to `head` element.
+   */
   function createCssRules() {
-
     // create style rules
     let v = measureVCellPaddingAndBorder();
     let rules = ['.hidden {visibility: hidden;}'];
@@ -316,25 +350,42 @@ function ColGroup() {
       var column = columns[i];
       acc[depth] = acc[depth] || [];
       acc[depth].push(column);
-      if (Object.prototype.toString.apply(column.children) === '[object Array]') {
+      if (hasChildren(column)) {
         genColumnsDefByLevel(column.children, depth + 1, acc);
       }
     }
     return acc;
   }
 
+  /**
+   * Create the flatten array of column definations for original `Slick.Grid#setColumn`,
+   * from structured column definations.
+   * @param {Array.<Object>} columns structured column definations
+   * @returns {Array.<Object>} Array of column definations
+   */
   function genInnerColumnsDef(columns, acc = [], first = true) {
     if (first) d('genInnerColumnsDef (recursive)');
 
     for (var i = 0, len = columns.length; i < len; i++) {
       var column = columns[i];
-      if (column.children == null) {
+      if (!hasChildren(column)) {
         acc.push(column);
-      } else if (Object.prototype.toString.apply(column.children) === '[object Array]') {
+      } else {
         genInnerColumnsDef(column.children, acc, false);
       }
     }
     return acc;
+  }
+
+  /**
+   * Determine whether the column has children.
+   * @param {Object} column defination
+   * @returns {Boolean} has children or not
+   */
+  function hasChildren(column) {
+    return column.children &&
+      column.children.length > 0 &&
+      Object.prototype.toString.apply(column.children) === '[object Array]';
   }
 
   $.extend(this, {
