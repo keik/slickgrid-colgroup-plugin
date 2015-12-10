@@ -497,7 +497,7 @@ function plural(ms, n, name) {
 },{}],4:[function(require,module,exports){
 /**
  * https://github.com/keik/slickgrid-colgroup-plugin
- * @version v1.0.0
+ * @version $VERSION
  * @author keik <k4t0.kei@gmail.com>
  * @license MIT
  */
@@ -713,9 +713,9 @@ function ColGroup() {
         columnsDefByLevel = _cache[_uid].columnsDefByLevel,
         origHeadersWidth = getHeadersWidth(),
         groupHeadersEl = _cache[_uid].groupHeadersEl,
-        colGroupDepth = groupHeadersEl.length;
+        maxDepth = groupHeadersEl.length;
 
-    for (var r = 0; r < colGroupDepth; r++) {
+    for (var r = 0; r < maxDepth; r++) {
       groupHeadersEl[r].style.width = origHeadersWidth;
     }
 
@@ -723,33 +723,51 @@ function ColGroup() {
 
     setWidthRecursively(columnsDef);
     function setWidthRecursively(columnsDef) {
-      var depth = arguments.length <= 1 || arguments[1] === undefined ? 0 : arguments[1];
-      var colIdx = arguments.length <= 2 || arguments[2] === undefined ? [] : arguments[2];
+      var currentDepth = arguments.length <= 1 || arguments[1] === undefined ? 0 : arguments[1];
+      var offset = arguments.length <= 2 || arguments[2] === undefined ? 0 : arguments[2];
+      var memo = arguments.length <= 3 || arguments[3] === undefined ? {} : arguments[3];
 
       for (var c = 0, C = columnsDef.length; c < C; c++) {
-        // update index in the depth
-        colIdx[depth] = colIdx[depth] == null ? 0 : colIdx[depth] + 1;
 
-        var width = -measureCellHorizontalPaddingAndBorder();
-        var column = columnsDef[c];
-        if (column.children && column.children.length > 0) {
+        var column = columnsDef[c],
+            width = column.width || _cache[_uid].grid.getOptions().defaultColumnWidth,
+            finalwidth = 0;
+
+        // let columnSelector = `#slickgrid_${ _uid + String(column.id).replace(/(#|,|\.)/g, '\\$1') }`;
+        // let columnEl = _cache[_uid].headerScrollerEl.querySelector(columnSelector);
+        // let width = parseInt(window.getComputedStyle(columnEl).width, 10);
+
+        // console.log(column.id, width, columnEl.offsetWidth);
+        if (hasChildren(column)) {
           // process children at first
-          setWidthRecursively(column.children, depth + 1, colIdx);
-          if (depth < colGroupDepth - 1) {
-            for (var c2 = 0, C2 = column.children.length; c2 < C2; c2++) {
-              width += parseInt(groupHeadersEl[depth + 1].children[columnsDefByLevel[depth + 1].indexOf(column.children[c2])].offsetWidth, 10);
-            }
-            groupHeadersEl[depth].children[c].style.width = width + 'px';
-          } else {
-            for (var c2 = 0, C2 = column.children.length; c2 < C2; c2++) {
-              width += parseInt(origHeadersEl.querySelector('#slickgrid_' + (_uid + String(column.children[c2].id).replace(/(#|,|\.)/g, '\\$1'))).offsetWidth, 10);
-            }
-            groupHeadersEl[depth].children[columnsDefByLevel[depth].indexOf(column)].style.width = width + 'px';
+          setWidthRecursively(column.children, currentDepth + 1, offset, memo);
+          // sum width of same level cells
+          for (var c2 = 0, C2 = column.children.length; c2 < C2; c2++) {
+            var columnSelector = '#slickgrid_' + (_uid + String(column.children[c2].id).replace(/(#|,|\.)/g, '\\$1'));
+            var columnEl = _cache[_uid].headerScrollerEl.querySelector(columnSelector);
+            console.log(parseInt(window.getComputedStyle(columnEl).width, 10) + measureCellHorizontalPaddingAndBorder());
+            finalwidth += parseInt(window.getComputedStyle(columnEl).width, 10) + measureCellHorizontalPaddingAndBorder();
+            // finalwidth += memo[column.children[c2].id];
           }
-        } else if (depth < colGroupDepth) {
-          // process the tip
-          width += parseInt(origHeadersEl.querySelector('#slickgrid_' + (_uid + String(column.id).replace(/(#|,|\.)/g, '\\$1'))).offsetWidth, 10);
-          groupHeadersEl[depth].children[colIdx[depth]].style.width = width + 'px';
+          if (c > 0 && currentDepth > maxDepth - 1) {
+            console.log('heihei');
+            finalwidth -= offset;
+          }
+          console.log('[#1]', column.id, 'width:' + width, 'offset:' + offset, 'finalwidth:' + finalwidth, c, currentDepth);
+          offset = 0;
+        } else {
+          finalwidth = c !== 0 ? width : width + offset;
+          console.log('[#2]', column.id, 'width:' + width, 'offset:' + offset, 'finalwidth:' + finalwidth, c);
+          offset = width;
+        }
+        // memo[column.id] = finalwidth;
+
+        // fix width actually
+        if (currentDepth < maxDepth) {
+          var columnSelector = '#slickgrid_' + (_uid + String(column.id).replace(/(#|,|\.)/g, '\\$1'));
+          var columnEl = _cache[_uid].headerScrollerEl.querySelector(columnSelector);
+          column.width = finalwidth;
+          columnEl.style.width = finalwidth - measureCellHorizontalPaddingAndBorder() + 'px';
         }
       }
     }
@@ -806,7 +824,8 @@ function ColGroup() {
           columnsGroupHtml = '';
       for (c = 0, C = columns.length; c < C; c++) {
         var column = columns[c];
-        columnsGroupHtml += '\n<div class="ui-state-default slick-header-column slick-header-columns-group">\n  <span class="slick-column-name">' + (hasChildren(column) ? column.name : '') + '</span>\n</div>';
+        console.log(column);
+        columnsGroupHtml += '\n<div class="ui-state-default slick-header-column slick-header-columns-group ' + column.headerCssClass + '"\n  id="slickgrid_' + (_uid + column.id) + '"\n  title="' + column.toolTip + '">\n  <span class="slick-column-name">' + (hasChildren(column) ? column.name || '' : '') + '</span>\n</div>';
         // apply CSS rule for rowspan to tip
         if (!hasChildren(column)) {
           var headersEl = _cache[_uid].origHeadersEl;
@@ -893,7 +912,7 @@ function ColGroup() {
    * @returns {Boolean} has children or not
    */
   function hasChildren(column) {
-    return column.children && column.children.length > 0 && Object.prototype.toString.apply(column.children) === '[object Array]';
+    return column.children && column.children.length > 0 && Object.prototype.toString.apply(column.children) === '[object Array]' || false;
   }
 
   $.extend(this, {
