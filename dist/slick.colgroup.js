@@ -594,6 +594,7 @@ function ColGroup() {
         _cache[_uid].innerColumnsDef = genInnerColumnsDef(columnsDef);
         _cache[_uid].columnsDefByLevel = genColumnsDefByLevel(grid.getColumns());
         originalSetColumns(_cache[_uid].innerColumnsDef);
+        createColumnGroupHeaderRow();
         createColumnGroupHeaders();
       };
     })(grid.setColumns);
@@ -770,7 +771,12 @@ function ColGroup() {
   function createColumnGroupHeaderRow() {
     d('createColumnGroupHeaderRow');
 
-    _cache[_uid].groupHeadersEl = [];
+    var headerScrollerEl = _cache[_uid].headerScrollerEl;
+    _cache[_uid].groupHeadersEl = _cache[_uid].groupHeadersEl || [];
+    for (var i = 0, len = _cache[_uid].groupHeadersEl.length; i < len; i++) {
+      headerScrollerEl.removeChild(_cache[_uid].groupHeadersEl[i]);
+    }
+
     var columnsDefByLevel = _cache[_uid].columnsDefByLevel,
         fragment = document.createDocumentFragment();
     for (var i = 0, len = columnsDefByLevel.length; i < len - 1; i++) {
@@ -780,7 +786,7 @@ function ColGroup() {
       _cache[_uid].groupHeadersEl[i] = tmp.childNodes[0];
       fragment.appendChild(_cache[_uid].groupHeadersEl[i]);
     }
-    _cache[_uid].headerScrollerEl.insertBefore(fragment, _cache[_uid].headerScrollerEl.firstChild);
+    headerScrollerEl.insertBefore(fragment, _cache[_uid].headerScrollerEl.firstChild);
   }
 
   /**
