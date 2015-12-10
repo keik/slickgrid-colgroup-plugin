@@ -742,13 +742,13 @@ function ColGroup() {
             groupHeadersEl[depth].children[c].style.width = width + 'px';
           } else {
             for (var c2 = 0, C2 = column.children.length; c2 < C2; c2++) {
-              width += parseInt(origHeadersEl.querySelector('#slickgrid_' + (_uid + column.children[c2].id)).offsetWidth, 10);
+              width += parseInt(origHeadersEl.querySelector('#slickgrid_' + (_uid + String(column.children[c2].id).replace(/(#|,|\.)/g, '\\$1'))).offsetWidth, 10);
             }
             groupHeadersEl[depth].children[columnsDefByLevel[depth].indexOf(column)].style.width = width + 'px';
           }
         } else if (depth < colGroupDepth) {
           // process the tip
-          width += parseInt(origHeadersEl.querySelector('#slickgrid_' + (_uid + column.id)).offsetWidth, 10);
+          width += parseInt(origHeadersEl.querySelector('#slickgrid_' + (_uid + String(column.id).replace(/(#|,|\.)/g, '\\$1'))).offsetWidth, 10);
           groupHeadersEl[depth].children[colIdx[depth]].style.width = width + 'px';
         }
       }
@@ -810,7 +810,7 @@ function ColGroup() {
         // apply CSS rule for rowspan to tip
         if (!hasChildren(column)) {
           var headersEl = _cache[_uid].origHeadersEl;
-          var tipColumn = headersEl.querySelector('#slickgrid_' + (_uid + column.id));
+          var tipColumn = headersEl.querySelector('#slickgrid_' + (_uid + String(column.id).replace(/(#|,|\.)/g, '\\$1')));
           tipColumn.className += ' h' + (columnsDefByLevel.length - r);
         }
       }
