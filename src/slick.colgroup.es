@@ -56,10 +56,12 @@ function ColGroup() {
    */
 
   /** UID of a current target grid. this would be side-effected */
-  let _uid,
+  let _uid, // like #slickgrid_1111111
+
+      /** Event handler */
       _handler = new Slick.EventHandler(),
 
-      /** cache for a grid object and DOM elements associated with UID */
+      /** Cache for a grid object and DOM elements associated with UID */
       _cache = {};
 
   function init(grid) {
@@ -68,17 +70,20 @@ function ColGroup() {
     _uid = grid.getContainerNode().className.match(/(?: |^)slickgrid_(\d+)(?!\w)/)[1];
     _handler
       .subscribe(grid.onColumnsResized, handleColumnsResized);
-    _cache[_uid] = {};
-    _cache[_uid].grid = grid;
-    _cache[_uid].headerScrollerEl = grid.getContainerNode().getElementsByClassName('slick-header')[0];
-    _cache[_uid].origHeadersEl = _cache[_uid].headerScrollerEl.getElementsByClassName('slick-header-columns')[0];
-    let v = measureVCellPaddingAndBorder();
-    _cache[_uid].origHeadersEl.style.height = v.height + v.heightDiff + 'px';
-    _cache[_uid].origHeadersEl.style.overflow = 'visible';
-    _cache[_uid].columnsDef = grid.getColumns();
-    _cache[_uid].innerColumnsDef = genInnerColumnsDef(_cache[_uid].columnsDef);
-    _cache[_uid].columnsDefByLevel = genColumnsDefByLevel(grid.getColumns());
-    _cache[_uid].grid.setColumns(_cache[_uid].innerColumnsDef);
+
+    // --------------------------
+    // cache grid relatives
+    // --------------------------
+
+    let cache = _cache[_uid] = {};
+    cache.grid = grid;
+    cache.headerScrollerEl = grid.getContainerNode().querySelector('.slick-header');
+    cache.origHeadersEl = cache.headerScrollerEl.querySelector('.slick-header-columns');
+
+    let originalColumnDef = grid.getColumns(),
+        v = measureVCellPaddingAndBorder();
+    cache.origHeadersEl.style.height = v.height + v.heightDiff + 'px';
+    cache.origHeadersEl.style.overflow = 'visible';
 
     // ------------------------------
     // overwrite methods
@@ -92,12 +97,15 @@ function ColGroup() {
         // update current target grid UID
         _uid = this.getContainerNode().className.match(/(?: |^)slickgrid_(\d+)(?!\w)/)[1];
 
-        _cache[_uid].columnsDef = columnsDef;
-        _cache[_uid].innerColumnsDef = genInnerColumnsDef(columnsDef);
-        _cache[_uid].columnsDefByLevel = genColumnsDefByLevel(grid.getColumns());
-        originalSetColumns(_cache[_uid].innerColumnsDef);
+        // -  columns definations
+        let cache = _cache[_uid];
+        cache.columnsDef = columnsDef;
+        cache.innerColumnsDef = genInnerColumnsDef(columnsDef);
+        cache.columnsDefByLevel = genColumnsDefByLevel(grid.getColumns());
+        originalSetColumns(cache.innerColumnsDef);
         createColumnGroupHeaderRow();
         createColumnGroupHeaders();
+        applyColumnGroupWidths();
       };
     }(grid.setColumns));
 
@@ -119,6 +127,7 @@ function ColGroup() {
       }(grid[fnName]));
     });
 
+
     // ------------------------------
     // initializing advices
     // ------------------------------
@@ -132,18 +141,17 @@ function ColGroup() {
           _uid = this.getContainerNode().className.match(/(?: |^)slickgrid_(\d+)(?!\w)/)[1];
 
           originalInit();
-          measureCellHorizontalPaddingAndBorder = memoizeMeasureCellHorizontalPaddingAndBorder();
+
+          measureHCellPaddingAndBorder = memoizeMeasureHCellPaddingAndBorder();
+          grid.setColumns(originalColumnDef);
           createCssRules();
-          createColumnGroupHeaderRow();
-          createColumnGroupHeaders();
           d('grid has been initialized with EXPLICIT mode');
         };
       }(grid.init));
     } else {
-      measureCellHorizontalPaddingAndBorder = memoizeMeasureCellHorizontalPaddingAndBorder();
+      measureHCellPaddingAndBorder = memoizeMeasureHCellPaddingAndBorder();
+      grid.setColumns(originalColumnDef);
       createCssRules();
-      createColumnGroupHeaderRow();
-      createColumnGroupHeaders();
       d('grid has been initialized with IMPLICIT mode');
     }
   }
@@ -159,23 +167,24 @@ function ColGroup() {
 
   /**
    * Return horizontal padding and border pixels on a cell.
-   * @return {Number} Horizontal padding and border pixels on a cell
+   * @return {Number} Sum of horizontal padding and border pixels on a cell
    */
-  var measureCellHorizontalPaddingAndBorder;
-  function memoizeMeasureCellHorizontalPaddingAndBorder() {
+  var measureHCellPaddingAndBorder;
+  function memoizeMeasureHCellPaddingAndBorder() {
     d('genMeasureCellHorizontalPaddingAndBorder');
 
     let headerColumnWidthDiff;
 
     return function() {
-      d('measureCellHorizontalPaddingAndBorder');
+      d('measureHCellPaddingAndBorder');
 
-      if (headerColumnWidthDiff)
+      if (headerColumnWidthDiff != null)
         return headerColumnWidthDiff;
 
-      let computed = window.getComputedStyle(_cache[_uid].origHeadersEl.getElementsByClassName('slick-header-column')[0]);
+      let computed = window.getComputedStyle(_cache[_uid].origHeadersEl.getElementsByClassName('slick-header-column')[0]),
+          h = ['paddingLeft', 'paddingRight', 'borderLeftWidth', 'borderRightWidth'];
       headerColumnWidthDiff = 0;
-      ['paddingLeft', 'paddingRight', 'borderLeftWidth', 'borderRightWidth'].forEach(function(val) {
+      h.forEach(function(val) {
         headerColumnWidthDiff += (parseFloat(computed[val]) || 0);
       });
       return headerColumnWidthDiff;
@@ -185,20 +194,19 @@ function ColGroup() {
   /**
    * Measure a cell height and horizontal padding. (almost adapted from `measureCellPaddingAndBorder` in slick.grid.js)
    * @private
-   * @returns {undefined} undefined
+   * @returns {Object} height, and border plus padding
    */
   function measureVCellPaddingAndBorder() {
 
     let v = ['borderTopWidth', 'borderBottomWidth', 'paddingTop', 'paddingBottom'],
         $canvas = $(_cache[_uid].grid.getCanvasNode()),
         $r = $('<div class="slick-row" />').appendTo($canvas),
-        $el = $('<div class="slick-cell" id="" style="visibility:hidden">-</div>').appendTo($r);
-
-    let height,
+        $el = $('<div class="slick-cell" id="" style="visibility:hidden">-</div>').appendTo($r),
+        height,
         heightDiff = 0;
 
     height = parseFloat($el.css('height'));
-    $.each(v, function(n, val) {
+    v.forEach(function(val) {
       heightDiff += parseFloat($el.css(val)) || 0;
     });
     $r.remove();
@@ -212,64 +220,43 @@ function ColGroup() {
   function applyColumnGroupWidths() {
     d('applyColumnGroupWidths');
 
-    let origHeadersEl = _cache[_uid].origHeadersEl,
-        columnsDefByLevel = _cache[_uid].columnsDefByLevel,
+    let cache = _cache[_uid],
         origHeadersWidth = getHeadersWidth(),
-        groupHeadersEl = _cache[_uid].groupHeadersEl,
-        maxDepth = groupHeadersEl.length;
+        groupHeadersEl = cache.groupHeadersEl,
+        maxLevel = groupHeadersEl.length;
 
-    for (let r = 0; r < maxDepth; r++) {
+    for (let r = 0; r < maxLevel; r++) {
       groupHeadersEl[r].style.width = origHeadersWidth;
     }
 
-    let columnsDef = _cache[_uid].columnsDef;
-
-    setWidthRecursively(columnsDef);
-    function setWidthRecursively(columnsDef, currentDepth = 0, offset = 0, memo = {}) {
+    let hPadding = measureHCellPaddingAndBorder();
+    setWidthRecursively(cache.columnsDef);
+    function setWidthRecursively(columnsDef, level = 0, offsetsByLevel = {}) {
       for (let c = 0, C = columnsDef.length; c < C; c++) {
-
         let column = columnsDef[c],
-            width = (column.width || _cache[_uid].grid.getOptions().defaultColumnWidth),
-            finalwidth = 0;
+            columnSelector = `#slickgrid_${ _uid + String(column.id).replace(/(#|,|\.)/g, '\\$1') }`,
+            columnEl = cache.headerScrollerEl.querySelector(columnSelector);
 
-        // let columnSelector = `#slickgrid_${ _uid + String(column.id).replace(/(#|,|\.)/g, '\\$1') }`;
-        // let columnEl = _cache[_uid].headerScrollerEl.querySelector(columnSelector);
-        // let width = parseInt(window.getComputedStyle(columnEl).width, 10);
-
-        // console.log(column.id, width, columnEl.offsetWidth);
         if (hasChildren(column)) {
-          // process children at first
-          setWidthRecursively(column.children, currentDepth + 1, offset, memo);
-          // sum width of same level cells
+          setWidthRecursively(column.children, level + 1, offsetsByLevel);
+          let width = 0;
           for (let c2 = 0, C2 = column.children.length; c2 < C2; c2++) {
-            let columnSelector = `#slickgrid_${ _uid + String(column.children[c2].id).replace(/(#|,|\.)/g, '\\$1') }`;
-            let columnEl = _cache[_uid].headerScrollerEl.querySelector(columnSelector);
-            console.log(parseInt(window.getComputedStyle(columnEl).width, 10) + measureCellHorizontalPaddingAndBorder());
-            finalwidth += parseInt(window.getComputedStyle(columnEl).width, 10) + measureCellHorizontalPaddingAndBorder();
-            // finalwidth += memo[column.children[c2].id];
+            let columnSelector = `#slickgrid_${ _uid + String(column.children[c2].id).replace(/(#|,|\.)/g, '\\$1') }`,
+                columnEl = cache.headerScrollerEl.querySelector(columnSelector);
+            width += columnEl.offsetWidth;
           }
-          if (c > 0 && currentDepth > maxDepth - 1) {
-            console.log('heihei');
-            finalwidth -= offset;
-          }
-          console.log('[#1]', column.id, 'width:' + width, 'offset:' + offset, 'finalwidth:' + finalwidth, c, currentDepth);
-          offset = 0;
+          columnEl.style.width = width - hPadding + 'px';
+          columnEl.style.marginLeft = offsetsByLevel[level] + 'px';
+          offsetsByLevel[level] = 0;
         } else {
-          finalwidth = (c !== 0 ? width : width + offset);
-          console.log('[#2]', column.id, 'width:' + width, 'offset:' + offset, 'finalwidth:' + finalwidth, c);
-          offset = width;
+          for (let l = level; l < maxLevel; l++) {
+            offsetsByLevel[l] = (offsetsByLevel[l] || 0) + columnEl.offsetWidth;
+          }
         }
-        // memo[column.id] = finalwidth;
-
-        // fix width actually
-        if (currentDepth < maxDepth) {
-          let columnSelector = `#slickgrid_${ _uid + String(column.id).replace(/(#|,|\.)/g, '\\$1') }`;
-          let columnEl = _cache[_uid].headerScrollerEl.querySelector(columnSelector);
-          column.width = finalwidth;
-          columnEl.style.width = (finalwidth - measureCellHorizontalPaddingAndBorder()) + 'px';
-        }
+        d(column.id, level,  offsetsByLevel);
       }
     }
+
   } // applyColumnGroupWidths
 
   /**
@@ -288,22 +275,26 @@ function ColGroup() {
   function createColumnGroupHeaderRow() {
     d('createColumnGroupHeaderRow');
 
-    var headerScrollerEl = _cache[_uid].headerScrollerEl;
-    _cache[_uid].groupHeadersEl = _cache[_uid].groupHeadersEl || [];
-    for (let i = 0, len = _cache[_uid].groupHeadersEl.length; i < len; i++) {
-      headerScrollerEl.removeChild(_cache[_uid].groupHeadersEl[i]);
+    let cache = _cache[_uid],
+        headerScrollerEl = cache.headerScrollerEl,
+        groupHeadersEl = cache.groupHeadersEl = cache.groupHeadersEl || [],
+        columnsDefByLevel = cache.columnsDefByLevel;
+
+    // destroy currents
+    for (let i = 0, len = groupHeadersEl.length; i < len; i++) {
+      headerScrollerEl.removeChild(cache.groupHeadersEl[i]);
     }
 
-    let columnsDefByLevel = _cache[_uid].columnsDefByLevel,
-        fragment = document.createDocumentFragment();
+    // create and append newers
+    let fragment = document.createDocumentFragment();
     for (let i = 0, len = columnsDefByLevel.length; i < len - 1; i++) {
       let tmp = document.createElement('div');
       tmp.innerHTML = '<div class="slick-header-columns slick-header-columns-groups" style="left: -1000px" unselectable="on"></div>';
       d('  create groupHeadersEl[%d]', i);
-      _cache[_uid].groupHeadersEl[i] = tmp.childNodes[0];
-      fragment.appendChild(_cache[_uid].groupHeadersEl[i]);
+      groupHeadersEl[i] = tmp.childNodes[0];
+      fragment.appendChild(groupHeadersEl[i]);
     }
-    headerScrollerEl.insertBefore(fragment, _cache[_uid].headerScrollerEl.firstChild);
+    headerScrollerEl.insertBefore(fragment, cache.headerScrollerEl.firstChild);
   }
 
   /**
@@ -312,36 +303,36 @@ function ColGroup() {
   function createColumnGroupHeaders() {
     d('createColumnGroupHeaders');
 
-    let r, R, c, C,
-        columnsDefByLevel = _cache[_uid].columnsDefByLevel;
+    let cache = _cache[_uid],
+        columnsDefByLevel = cache.columnsDefByLevel;
 
-    for (r = 0, R = columnsDefByLevel.length; r < R - 1; r++) {
-      let columns = columnsDefByLevel[r],
+    for (let r = 0, R = cache.groupHeadersEl.length; r < R; r++) {
+      let toCreateColumnsDef = columnsDefByLevel[r],
           columnsGroupHtml = '';
-      for (c = 0, C = columns.length; c < C; c++) {
-        let column = columns[c];
-        console.log(column);
-        columnsGroupHtml += `
+
+      for (let c = 0, C = toCreateColumnsDef.length; c < C; c++) {
+        let column = toCreateColumnsDef[c];
+
+        if (hasChildren(column)) {
+          // the column which have children has a role for showing column name
+          columnsGroupHtml += `
 <div class="ui-state-default slick-header-column slick-header-columns-group ${ column.headerCssClass }"
   id="slickgrid_${ _uid + column.id }"
   title="${ column.toolTip }">
   <span class="slick-column-name">${ hasChildren(column) ? (column.name || '') : '' }</span>
 </div>`;
-        // apply CSS rule for rowspan to tip
-        if (!hasChildren(column)) {
-          let headersEl = _cache[_uid].origHeadersEl;
-          let tipColumn = headersEl.querySelector(`#slickgrid_${ _uid + String(column.id).replace(/(#|,|\.)/g, '\\$1') }`);
+          d('  create a "%s" cell in groupHeadersEl[%d]', column.id, r);
+        } else {
+          // the column which have no children is a tip column
+          let tipColumn = cache.origHeadersEl.querySelector(`#slickgrid_${ _uid + String(column.id).replace(/(#|,|\.)/g, '\\$1') }`);
           tipColumn.className += ' h' + (columnsDefByLevel.length - r);
         }
       }
-      d('  create groupHeadersEl[%d]', r);
-
-      _cache[_uid].groupHeadersEl[r].innerHTML = columnsGroupHtml;
+      cache.groupHeadersEl[r].innerHTML = columnsGroupHtml;
     }
-    applyColumnGroupWidths();
 
-    // for horizontal scroll bar
-    _cache[_uid].grid.resizeCanvas();
+    // // for horizontal scroll bar
+    cache.grid.resizeCanvas();
   }
 
   /**
@@ -350,10 +341,10 @@ function ColGroup() {
    */
   function createCssRules() {
     // create style rules
-    let v = measureVCellPaddingAndBorder();
-    let rules = ['.hidden {visibility: hidden;}'];
+    let v = measureVCellPaddingAndBorder(),
+        rules = ['.hidden {visibility: hidden;}'],
+        maxrow = 30; // TODO to be intelligent
 
-    let maxrow = 30; // TODO to be intelligent
     for (let i = 0; i < maxrow; i++) {
       rules.push(`
 .slick-header-column.h${ i } {
@@ -374,8 +365,8 @@ function ColGroup() {
   function genColumnsDefByLevel(columns, depth = 0, acc = []) {
     if (depth === 0) d('genColumnsDefByLevel (recursive)');
 
-    for (var i = 0, len = columns.length; i < len; i++) {
-      var column = columns[i];
+    for (let i = 0, len = columns.length; i < len; i++) {
+      let column = columns[i];
       acc[depth] = acc[depth] || [];
       acc[depth].push(column);
       if (hasChildren(column)) {
@@ -394,8 +385,8 @@ function ColGroup() {
   function genInnerColumnsDef(columns, acc = [], first = true) {
     if (first) d('genInnerColumnsDef (recursive)');
 
-    for (var i = 0, len = columns.length; i < len; i++) {
-      var column = columns[i];
+    for (let i = 0, len = columns.length; i < len; i++) {
+      let column = columns[i];
       if (!hasChildren(column)) {
         acc.push(column);
       } else {

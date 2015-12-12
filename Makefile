@@ -21,7 +21,7 @@ run-dev-server: node_modules
 	@node_modules/.bin/http-server
 
 watch-js: node_modules
-	@node_modules/.bin/watchify $(MAIN) -o $(DIST) -t babelify -v
+	@node_modules/.bin/watchify $(MAIN) -o $(DIST) -t babelify -v -d
 
 test: node_modules
 	@node_modules/.bin/mocha-phantomjs tests/index.html
