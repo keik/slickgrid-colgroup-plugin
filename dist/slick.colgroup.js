@@ -835,11 +835,12 @@ function ColGroup() {
    */
   function createCssRules() {
     // create style rules
-    var v = measureVCellPaddingAndBorder(),
+    var cache = _cache[_uid],
+        v = measureVCellPaddingAndBorder(),
         rules = ['.hidden {visibility: hidden;}'],
-        maxrow = 30; // TODO to be intelligent
+        maxLevel = cache.columnsDefByLevel.length;
 
-    for (var i = 0; i < maxrow; i++) {
+    for (var i = 1; i <= maxLevel; i++) {
       rules.push('\n.slick-header-column.h' + i + ' {\n  margin: ' + (1 - i) * (v.height + v.heightDiff) + 'px 0 0 0;\n  font-size: inherit;\n  height: ' + (i * (v.height + v.heightDiff) - v.heightDiff * 2 + 1) + 'px;\n}');
     }
 

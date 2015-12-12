@@ -341,11 +341,12 @@ function ColGroup() {
    */
   function createCssRules() {
     // create style rules
-    let v = measureVCellPaddingAndBorder(),
+    let cache = _cache[_uid],
+        v = measureVCellPaddingAndBorder(),
         rules = ['.hidden {visibility: hidden;}'],
-        maxrow = 30; // TODO to be intelligent
+        maxLevel = cache.columnsDefByLevel.length;
 
-    for (let i = 0; i < maxrow; i++) {
+    for (let i = 1; i <= maxLevel; i++) {
       rules.push(`
 .slick-header-column.h${ i } {
   margin: ${ (1 - i) * (v.height + v.heightDiff) }px 0 0 0;
