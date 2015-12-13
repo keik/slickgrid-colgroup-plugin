@@ -497,7 +497,7 @@ function plural(ms, n, name) {
 },{}],4:[function(require,module,exports){
 /**
  * https://github.com/keik/slickgrid-colgroup-plugin
- * @version v1.0.1
+ * @version v1.0.2
  * @author keik <k4t0.kei@gmail.com>
  * @license MIT
  */
