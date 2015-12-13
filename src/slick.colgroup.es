@@ -181,12 +181,17 @@ function ColGroup() {
       if (headerColumnWidthDiff != null)
         return headerColumnWidthDiff;
 
-      let computed = window.getComputedStyle(_cache[_uid].origHeadersEl.getElementsByClassName('slick-header-column')[0]),
-          h = ['paddingLeft', 'paddingRight', 'borderLeftWidth', 'borderRightWidth'];
-      headerColumnWidthDiff = 0;
+      let h = ['paddingLeft', 'paddingRight', 'borderLeftWidth', 'borderRightWidth'],
+          $r = $(_cache[_uid].origHeadersEl),
+          $el = $('<div class="ui-state-default slick-header-column" id="" style="visibility:hidden">-</div>').appendTo($r),
+          widthDiff = 0;
+
       h.forEach(function(val) {
-        headerColumnWidthDiff += (parseFloat(computed[val]) || 0);
+        widthDiff += (parseFloat($el.css(val)) || 0);
       });
+      $el.remove();
+      headerColumnWidthDiff = widthDiff;
+
       return headerColumnWidthDiff;
     };
   }
