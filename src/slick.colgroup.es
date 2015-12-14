@@ -5,6 +5,8 @@
  * @license MIT
  */
 
+import 'es5-shim';
+
 let d = require('debug')('slickgrid-colgroup-plugin');
 
 // register namespace
@@ -250,7 +252,7 @@ function ColGroup() {
             width += columnEl.offsetWidth;
           }
           columnEl.style.width = width - hPadding + 'px';
-          columnEl.style.marginLeft = offsetsByLevel[level] + 'px';
+          columnEl.style.marginLeft = (offsetsByLevel[level] || 0) + 'px';
           offsetsByLevel[level] = 0;
         } else {
           for (let l = level; l < maxLevel; l++) {
