@@ -6,7 +6,6 @@
  */
 
 let d = require('debug')('slickgrid-colgroup-plugin');
-localStorage.debug = '*';
 
 // register namespace
 $.extend(true, window, {

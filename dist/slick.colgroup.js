@@ -505,7 +505,6 @@ function plural(ms, n, name) {
 'use strict';
 
 var d = require('debug')('slickgrid-colgroup-plugin');
-localStorage.debug = '*';
 
 // register namespace
 $.extend(true, window, {
