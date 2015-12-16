@@ -4,7 +4,7 @@
 
 ![](https://github.com/keik/slickgrid-colgroup-plugin/raw/master/screenshots/screenshot.png)
 
-[demo](http://keik.info/products/slickgrid-colgroup-plugin/examples/)
+[demo](http://keik.github.io/slickgrid-colgroup-plugin/examples/)
 
 ## Usage
 
