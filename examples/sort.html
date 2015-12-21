@@ -1,0 +1,85 @@
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Mocha</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../bower_components/slickgrid/slick.grid.css" type="text/css" />
+    <link rel="stylesheet" href="../bower_components/slickgrid/css/smoothness/jquery-ui-1.8.16.custom.css" type="text/css" />
+    <link rel="stylesheet" href="../bower_components/slickgrid/examples/examples.css" type="text/css" />
+    <style>
+      body {margin: 0;}
+      .slick-header-columns {background-image: none;}
+      .slick-header-column {background-image: none; background-color: #eaeaea;}
+      .slick-header-column:hover {background-image: none; background-color: #D4EEFF;}
+    </style>
+  </head>
+  <body>
+
+    <div id="myGrid" style="width: 500px; height: 400px"></div>
+
+    <p style="margin-top: 12px; font-size: 1em">
+      you can sort data with id / col 1-1 / col 2-1.
+    </p>
+
+    <script src="../bower_components/slickgrid/lib/jquery-1.7.min.js"></script>
+    <script src="../bower_components/slickgrid/lib/jquery-ui-1.8.16.custom.min.js"></script>
+    <script src="../bower_components/slickgrid/lib/jquery.event.drag-2.2.js"></script>
+    <script src="../bower_components/slickgrid/slick.core.js"></script>
+    <script src="../bower_components/slickgrid/slick.dataview.js"></script>
+    <script src="../bower_components/slickgrid/slick.grid.js"></script>
+
+    <script src="../dist/slick.colgroup.js"></script>
+    <script>
+
+      var columns = [
+        {id: 'id', name: 'id', field: 'id', sortable: true},
+        {id: 'col1', name: 'col 1', children: [
+          {id: 'col1-1', name: 'col 1-1', field: 'col1-1', sortable: true},
+          {id: 'col1-2', name: 'col 1-2', field: 'col1-2'}
+        ]},
+        {id: 'id2', name: 'id2', field: 'id2'},
+        {id: 'col2', name: 'col 2', children: [
+          {id: 'col2-1', name: 'col 2-1', field: 'col2-1', sortable: true},
+          {id: 'col2-2', name: 'col 2-2', children: [
+            {id: 'col2-2-1', name: 'col 2-2-1', field: 'col2-2-1'},
+            {id: 'col2-2-2', name: 'col 2-2-2', field: 'col2-2-2'}
+          ]}
+        ]}
+      ];
+
+      var options = {
+        enableCellNavigation: true,
+        enableColumnReorder: false
+      };
+
+      var data = [];
+      for (var i = 0; i < 500; i++) {
+        data[i] = {
+          'id': i,
+          'col1-1': 'Task ' + i,
+          'col1-2': '5 days',
+          'id2': i,
+          'col2-1':    Math.round(Math.random() * 100),
+          'col2-2-1': '01/01/2009',
+          'col2-2-2': '01/05/2009'
+        };
+      }
+
+      var grid = new Slick.Grid('#myGrid', data, columns, options);
+      grid.registerPlugin(new Slick.Plugins.ColGroup());
+
+      // sort data itself for simplicity in spite of inefficiency
+      grid.onSort.subscribe(function(e, args) {
+        var field = args.sortCol.field;
+        var asc = args.sortAsc ? 1 : -1
+        data.sort(function(a, b) {
+          return a[field] > b[field] ? asc : -asc;
+        });
+        grid.invalidate();
+      });
+
+    </script>
+  </body>
+</html>

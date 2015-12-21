@@ -11,7 +11,7 @@ watch:
 
 # sub targets
 
-build-js: node_modules
+build-js: node_modules bower_components
 	@mkdir -p dist && \
 	node_modules/.bin/browserify -t babelify $(MAIN) -o $(DIST) && \
 	perl -i -pe 's/\$$VERSION/$(shell node -e 'console.log("v" + require("./package.json").version)')/' $(DIST) && \
@@ -20,7 +20,7 @@ build-js: node_modules
 run-dev-server: node_modules
 	@node_modules/.bin/http-server
 
-watch-js: node_modules
+watch-js: node_modules bower_components
 	@mkdir -p dist && \
 	node_modules/.bin/watchify $(MAIN) -o $(DIST) -t babelify -v -d
 
