@@ -322,7 +322,7 @@ function ColGroup() {
         if (hasChildren(column)) {
           // the column which have children has a role for showing column name
           columnsGroupHtml += `
-<div class="ui-state-default slick-header-column slick-header-columns-group ${ column.headerCssClass }"
+<div class="ui-state-default slick-header-column slick-header-columns-group ${ column.headerCssClass || '' }"
   id="slickgrid_${ _uid + column.id }"
   title="${ column.toolTip }">
   <span class="slick-column-name">${ hasChildren(column) ? (column.name || '') : '' }</span>

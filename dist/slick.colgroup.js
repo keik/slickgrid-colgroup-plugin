@@ -1201,7 +1201,12 @@ defineProperties(ArrayPrototype, {
 }, !spliceWorksWithLargeSparseArrays || !spliceWorksWithSmallSparseArrays);
 
 var originalJoin = ArrayPrototype.join;
-var hasStringJoinBug = Array.prototype.join.call('123', ',') !== '1,2,3';
+var hasStringJoinBug;
+try {
+    hasStringJoinBug = Array.prototype.join.call('123', ',') !== '1,2,3';
+} catch (e) {
+    hasStringJoinBug = true;
+}
 if (hasStringJoinBug) {
     defineProperties(ArrayPrototype, {
         join: function join(separator) {
@@ -2648,7 +2653,7 @@ function ColGroup() {
 
         if (hasChildren(column)) {
           // the column which have children has a role for showing column name
-          columnsGroupHtml += '\n<div class="ui-state-default slick-header-column slick-header-columns-group ' + column.headerCssClass + '"\n  id="slickgrid_' + (_uid + column.id) + '"\n  title="' + column.toolTip + '">\n  <span class="slick-column-name">' + (hasChildren(column) ? column.name || '' : '') + '</span>\n</div>';
+          columnsGroupHtml += '\n<div class="ui-state-default slick-header-column slick-header-columns-group ' + (column.headerCssClass || '') + '"\n  id="slickgrid_' + (_uid + column.id) + '"\n  title="' + column.toolTip + '">\n  <span class="slick-column-name">' + (hasChildren(column) ? column.name || '' : '') + '</span>\n</div>';
           d('  create a "%s" cell in groupHeadersEl[%d]', column.id, r);
         } else {
           // the column which have no children is a tip column
