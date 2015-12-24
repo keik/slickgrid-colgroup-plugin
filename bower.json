@@ -26,7 +26,8 @@
     "package.json",
     "screenshots",
     "examples",
-    "images"
+    "images",
+    "Makefile"
   ],
   "devDependencies": {
     "slickgrid": "https://github.com/mleibman/SlickGrid.git#2.1.0"
