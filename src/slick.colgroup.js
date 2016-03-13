@@ -5,8 +5,6 @@
  * @license MIT
  */
 
-import 'es5-shim';
-
 let d = require('debug')('slickgrid-colgroup-plugin');
 
 // register namespace

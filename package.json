@@ -40,6 +40,5 @@
     "watchify": "^3.3.1"
   },
   "dependencies": {
-    "es5-shim": "^4.4.0"
   }
 }
