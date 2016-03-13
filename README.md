@@ -1,5 +1,8 @@
 # slickgrid-colgroup-plugin
 
+[![travis-ci](https://img.shields.io/travis/keik/slickgrid-colgroup-plugin.svg?style=flat-square)](https://travis-ci.org/keik/slickgrid-colgroup-plugin)
+[![npm-version](https://img.shields.io/npm/v/slickgrid-colgroup-plugin.svg?style=flat-square)](https://npmjs.org/package/slickgrid-colgroup-plugin)
+
 [SlickGrid](https://github.com/mleibman/SlickGrid) plugin to create column group in a header.
 
 ![](https://github.com/keik/slickgrid-colgroup-plugin/raw/master/screenshots/screenshot.png)
