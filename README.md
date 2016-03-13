@@ -9,7 +9,36 @@
 
 [demo](http://keik.github.io/slickgrid-colgroup-plugin/examples/)
 
-## Usage
+
+# Installation
+
+## Node
+
+```
+npm install slickgrid-colgroup-plugin
+```
+
+```javascript
+require('slickgrid-colgroup-plugin') // export function globally like below
+var colGroupPlugin = new Slick.Plugins.ColGroup()
+```
+
+When using with [Browserify](https://github.com/substack/node-browserify), `babelily` and `babel-preset-es2015` are required.
+
+
+## Browser
+
+Download via `npm` or [releases](https://github.com/keik/slickgrid-colgroup-plugin/releases) and load standalone build version [dist/slickgrid-colgroup-plugin.js](./dist/slick.colgroup.js)
+
+```html
+<script src="slickgrid-colgroup-plugin/dist/slick.colgroup.js"></script>
+<script>
+  var colGroupPlugin = new Slick.Plugins.ColGroup()
+</script>
+```
+
+
+# Usage
 
 Register plugin:
 
@@ -35,7 +64,8 @@ var columns = [
 ]
 ```
 
-## Test
+
+# Test
 
 ```
 npm install
@@ -45,6 +75,6 @@ npm run test
 or open [test/index](./test/index.html) with web browser which we want to test on after `npm install`.
 
 
-## License
+# License
 
 MIT (c) keik
