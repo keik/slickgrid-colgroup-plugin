@@ -4,6 +4,7 @@
   "description": "SlickGrid plugin to create column group in a header.",
   "main": "src/slick.colgroup.js",
   "scripts": {
+    "test": "make test",
     "version": "make build && git add ."
   },
   "repository": {

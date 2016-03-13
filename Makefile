@@ -6,7 +6,6 @@ DIST        = dist
 
 all: clean lint $(DIST)/slick.colgroup.js $(DIST)/slick.colgroup.min.js test
 
-
 watch:
 	@make -j 2 run-dev-server watch-js
 
@@ -23,7 +22,7 @@ $(DIST)/slick.colgroup.js: node_modules $(DIST)
 watch-js: node_modules bower_components $(DIST)
 	@node_modules/.bin/watchify -t [ babelify --presets es2015 ] -t undebuggify $(MAIN) -v -d
 
-test: node_modules bower_components
+test: node_modules bower_components $(DIST)/slick.colgroup.js $(DIST)/slick.colgroup.min.js
 	@node_modules/.bin/mocha-phantomjs tests/index.html
 
 lint: node_modules
