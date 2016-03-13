@@ -11,10 +11,10 @@
 Register plugin:
 
 ```
-grid.registerPlugin(new Slick.Plugins.ColGroup());
+grid.registerPlugin(new Slick.Plugins.ColGroup())
 ```
 
-To specify a colmun group, extend the column definition to add `children` property with array value, like so:
+To specify a colmun group structure, extend the column definition to add `children` property with array value, like so:
 
 ```
 var columns = [
@@ -29,8 +29,18 @@ var columns = [
       {id: 'col2-2-2', name: 'col 2-2-2', field: 'col2-2-2'}
     ]}
   ]}
-];
+]
 ```
+
+## Test
+
+```
+npm install
+npm run test
+```
+
+or open [test/index](./test/index.html) with web browser which we want to test on after `npm install`.
+
 
 ## License
 
