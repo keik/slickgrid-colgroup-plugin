@@ -108,13 +108,11 @@ function ColGroup() {
       };
     }(grid.setColumns));
 
-    grid.getColumns = (function(originalGetColumns) {
-      return function() {
-        d('getColumns');
+    grid.getColumns = function() {
+      d('getColumns');
 
-        return _cache[_uid].columnsDef;
-      };
-    }(grid.getColumns));
+      return _cache[_uid].columnsDef;
+    };
 
     // no event fired when `autosizeColumns` called, so follow it by advicing below methods with column group resizing.
     ['invalidate', 'render'].forEach(function(fnName) {
