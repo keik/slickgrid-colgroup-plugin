@@ -5,7 +5,7 @@
   "main": "src/slick.colgroup.js",
   "scripts": {
     "test": "make test",
-    "version": "make build && git add ."
+    "version": "make && git add ."
   },
   "repository": {
     "type": "git",
