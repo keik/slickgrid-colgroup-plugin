@@ -23,7 +23,7 @@ watch-js: node_modules bower_components $(DIST)
 	@node_modules/.bin/watchify -t [ babelify --presets es2015 ] -t undebuggify $(MAIN) -v -d
 
 test: node_modules bower_components $(DIST)/slick.colgroup.js $(DIST)/slick.colgroup.min.js
-	@node_modules/.bin/mocha-phantomjs tests/index.html
+	@node_modules/.bin/mocha-phantomjs test/index.html
 
 lint: node_modules
 	@node_modules/.bin/eslint src/*.js
