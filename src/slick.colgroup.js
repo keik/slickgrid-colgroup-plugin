@@ -5,8 +5,6 @@
  * @license MIT
  */
 
-import 'es5-shim';
-
 let d = require('debug')('slickgrid-colgroup-plugin');
 
 // register namespace
@@ -110,13 +108,11 @@ function ColGroup() {
       };
     }(grid.setColumns));
 
-    grid.getColumns = (function(originalGetColumns) {
-      return function() {
-        d('getColumns');
+    grid.getColumns = function() {
+      d('getColumns');
 
-        return _cache[_uid].columnsDef;
-      };
-    }(grid.getColumns));
+      return _cache[_uid].columnsDef;
+    };
 
     // no event fired when `autosizeColumns` called, so follow it by advicing below methods with column group resizing.
     ['invalidate', 'render'].forEach(function(fnName) {
@@ -322,7 +318,7 @@ function ColGroup() {
         if (hasChildren(column)) {
           // the column which have children has a role for showing column name
           columnsGroupHtml += `
-<div class="ui-state-default slick-header-column slick-header-columns-group ${ column.headerCssClass }"
+<div class="ui-state-default slick-header-column slick-header-columns-group ${ column.headerCssClass || '' }"
   id="slickgrid_${ _uid + column.id }"
   title="${ column.toolTip }">
   <span class="slick-column-name">${ hasChildren(column) ? (column.name || '') : '' }</span>

@@ -1,9 +1,10 @@
-MAIN        = src/slick.colgroup.es
-DIST        = dist/slick.colgroup.js
+MAIN        = src/slick.colgroup.js
+DIST        = dist
+
 
 # main targets
 
-build: clean lint build-js test
+all: clean lint $(DIST)/slick.colgroup.js $(DIST)/slick.colgroup.min.js test
 
 watch:
 	@make -j 2 run-dev-server watch-js
@@ -11,24 +12,24 @@ watch:
 
 # sub targets
 
-build-js: node_modules bower_components
-	@mkdir -p dist && \
-	node_modules/.bin/browserify -t babelify $(MAIN) -o $(DIST) && \
-	perl -i -pe 's/\$$VERSION/$(shell node -e 'console.log("v" + require("./package.json").version)')/' $(DIST) && \
-	node_modules/.bin/uglifyjs $(DIST) -cm --comments -o $(DIST:.js=.min.js)
+$(DIST)/slick.colgroup.min.js: node_modules $(DIST)/slick.colgroup.js
+	@node_modules/.bin/uglifyjs $(DIST)/slick.colgroup.js -cm --comments -o $@
 
-run-dev-server: node_modules
-	@node_modules/.bin/http-server
+$(DIST)/slick.colgroup.js: node_modules $(DIST)
+	@node_modules/.bin/browserify -t [ babelify --presets es2015 ] -t undebuggify $(MAIN) -o $@
+	@perl -i -pe 's/\$$VERSION/$(shell node -e 'console.log("v" + require("./package.json").version)')/' $@
 
-watch-js: node_modules bower_components
-	@mkdir -p dist && \
-	node_modules/.bin/watchify $(MAIN) -o $(DIST) -t babelify -v -d
+watch-js: node_modules bower_components $(DIST)
+	@node_modules/.bin/watchify -t [ babelify --presets es2015 ] -t undebuggify $(MAIN) -v -d
 
-test: node_modules bower_components
-	@node_modules/.bin/mocha-phantomjs tests/index.html
+test: node_modules bower_components $(DIST)/slick.colgroup.js $(DIST)/slick.colgroup.min.js
+	@node_modules/.bin/mocha-phantomjs test/index.html
 
 lint: node_modules
-	@node_modules/.bin/eslint src/*.es
+	@node_modules/.bin/eslint src/*.js
+
+$(DIST):
+	@mkdir -p $@
 
 bower_components: bower.json node_modules
 	@node_modules/.bin/bower install
@@ -38,3 +39,5 @@ node_modules: package.json
 
 clean:
 	@rm -rf dist
+
+.PHONY: all watch watch-js test link clean
