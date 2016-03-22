@@ -131,6 +131,34 @@ describe('slickgrid-colgroup-plugin', function() {
         assert.equal(after_colgroupRowEl.length, 3);
       });
 
+      it('should not leak element when creating and destroying again', function() {
+        var afterCreate,
+            afterDestroy;
+
+        for (var i = 0; i < 10; i++) {
+          // setup
+          // exercise
+          grid = createGrid();
+          grid.registerPlugin(new Slick.Plugins.ColGroup());
+
+          // verify
+          if (afterCreate)
+            assert.equal(afterCreate, document.getElementsByTagName('*').length);
+          afterCreate = document.getElementsByTagName('*').length;
+
+          // exercise
+          grid.destroy();
+          $('#grid').remove();
+
+          // verify
+          if (afterDestroy)
+            assert.equal(afterDestroy, document.getElementsByTagName('*').length);
+          afterDestroy = document.getElementsByTagName('*').length;
+        }
+
+        grid = createGrid();
+      });
+
     });
   });
 });
