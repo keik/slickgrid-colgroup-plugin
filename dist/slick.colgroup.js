@@ -2445,6 +2445,15 @@ function ColGroup() {
       };
     })(grid.getColumns);
 
+    grid.destroy = (function (originalDestroy) {
+      return function () {
+        d('destroy');
+        var styleEl = _cache[_uid].styleEl;
+        styleEl.parentNode.removeChild(styleEl);
+        originalDestroy();
+      };
+    })(grid.destroy);
+
     // no event fired when `autosizeColumns` called, so follow it by advicing below methods with column group resizing.
     ['invalidate', 'render'].forEach(function (fnName) {
       grid[fnName] = (function (origFn) {
@@ -2678,7 +2687,7 @@ function ColGroup() {
       rules.push('\n.slick-header-column.h' + i + ' {\n  margin: ' + (1 - i) * (v.height + v.heightDiff) + 'px 0 0 0;\n  font-size: inherit;\n  height: ' + (i * (v.height + v.heightDiff) - v.heightDiff * 2 + 1) + 'px;\n}');
     }
 
-    var styleEl = $('<style type="text/css" rel="stylesheet" />').appendTo($('head'))[0];
+    var styleEl = cache.styleEl = $('<style type="text/css" rel="stylesheet" />').appendTo($('head'))[0];
     if (styleEl.styleSheet) {
       // IE
       styleEl.styleSheet.cssText = rules.join(' ');

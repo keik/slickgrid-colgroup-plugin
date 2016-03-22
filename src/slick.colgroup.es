@@ -118,6 +118,15 @@ function ColGroup() {
       };
     }(grid.getColumns));
 
+    grid.destroy = (function(originalDestroy) {
+      return function() {
+        d('destroy');
+        let styleEl = _cache[_uid].styleEl;
+        styleEl.parentNode.removeChild(styleEl);
+        originalDestroy();
+      };
+    }(grid.destroy));
+
     // no event fired when `autosizeColumns` called, so follow it by advicing below methods with column group resizing.
     ['invalidate', 'render'].forEach(function(fnName) {
       grid[fnName] = (function(origFn) {
@@ -361,7 +370,7 @@ function ColGroup() {
 }`);
     }
 
-    let styleEl = $('<style type="text/css" rel="stylesheet" />').appendTo($('head'))[0];
+    let styleEl = cache.styleEl = $('<style type="text/css" rel="stylesheet" />').appendTo($('head'))[0];
     if (styleEl.styleSheet) { // IE
       styleEl.styleSheet.cssText = rules.join(' ');
     } else {
