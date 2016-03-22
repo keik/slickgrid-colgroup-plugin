@@ -1,6 +1,6 @@
 {
   "name": "slickgrid-colgroup-plugin",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "SlickGrid plugin to create column group in a header.",
   "main": "src/slick.colgroup.js",
   "scripts": {
