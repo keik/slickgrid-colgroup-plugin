@@ -117,6 +117,9 @@ function ColGroup() {
     grid.destroy = (function(originalDestroy) {
       return function() {
         d('destroy');
+        // update current target grid UID
+        _uid = this.getContainerNode().className.match(/(?: |^)slickgrid_(\d+)(?!\w)/)[1];
+
         let styleEl = _cache[_uid].styleEl;
         styleEl.parentNode.removeChild(styleEl);
         originalDestroy();
